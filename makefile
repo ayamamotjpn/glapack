@@ -75,9 +75,9 @@ $(OBJD)/fortran.o : $(CUDADIR)/src/fortran.c
 #	$(CC) $(CCOPT) $(CSRC) $(INCC) -DCUBLAS_GFORTRAN -o $(OBJD)/fortran.o 
 #endif
 
-#install_intel :
-#	cp libglapack.so /usr/local/lib/glapack/intel
-#	cp glapack.mod /usr/local/include/glapack/intel
+install :
+	cp libglapack.so $(INSTLIBDIR)
+	cp glapack.mod $(INSTINCDIR)
 
 clean :
 	rm -f libglapack_*.so libgblas_*.so $(OBJD)/*.mod *.mod $(OBJ)
