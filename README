@@ -1,1 +1,28 @@
+The libgblas_xxx.so and libglapack_xxx.so (xxx=cpu,gpu) are
+libraries for using lapack and blas or culapack and MAGMA
+(gpu version of lapack) with generic function name. 
+
+For building libgblas_cpu.so and libglapack_cpu.so (CPU version)
+use the following command
+
+make 
+
+For installing them use
+
+make install
+
+For changing install-dir (default /usr/local/lib)
+
+For choosing compiler, edit make.inc
+F90 and CC lines
+
+gfortran ifort or pgf90 is available for F90
+gcc icc pgcc or nvcc is available for CC
+
+For building  libgblas_gpu.so and libglapack_gpu.so (GPU version)
+edit make.inc and choose VER = GPU (default is VER = CPU)
+
+prerequisite:
+
+blas lapack and for GPU version cublas and MAGMA libraries
 
