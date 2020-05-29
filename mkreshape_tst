@@ -1,0 +1,6 @@
+
+reshape_tst : reshape_tst.f90
+	ifort reshape_tst.f90 -o reshape_tst
+
+clean :
+	rm reshape_tst	
