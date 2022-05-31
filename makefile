@@ -1,4 +1,4 @@
-include ./make.inc
+include make.inc
 
 ARC = 86
 OBJD = obj_$(ARC)
@@ -8,7 +8,6 @@ CUD = $(shell pwd)
 #swp_band2d_g : $(PRG)
 
 FSRC = glapack.f90
-#LIB = -L/opt/rh/devtoolset-7/root/lib/gcc/x86_64-redhat-linux/7
 
 # for using CUDAFOR fortran_thunking.c is needed
 # but this is not supplied in cuda-10.1
@@ -19,10 +18,10 @@ FSRC = glapack.f90
 # Fortran wrapper fortran.c for using cuda
 #CSRC = $(CUDADIR)/src/fortran_thunking.c 
 
+OBJ = $(OBJD)/glapack.o
 ifeq ($(VER),GPU)
-	OBJ = $(OBJD)/cublasXt.o $(OBJD)/glapack.o $(OBJD)/fortran.o
-else
-	OBJ = $(OBJD)/glapack.o
+	OBJ += $(OBJD)/cublasXt.o $(OBJD)/fortran.o
+	FSRC += cublasXt.f90
 endif
 
 
@@ -35,7 +34,7 @@ ifeq ($(VER),GPU)
   all : libglapack_gpu.so libgblas_gpu.so
 
   libglapack_gpu.so : $(OBJ) 
-  #	$(F90) -pg $(OBJ) $(JDIR) $(LIB) -o $(PRG)     # for gpu version without cublas
+  #	$(F90) -pg $(OBJ) $(JDIR) $(LIB) -o $(PRG)            # for gpu version without cublas
 	$(F90) $(SHARED) $(OBJ) $(LIB) -o libglapack_gpu.so     # for gpu version with magma and cublas
 
   libgblas_gpu.so : $(OBJD)/fortran.o
@@ -43,7 +42,7 @@ ifeq ($(VER),GPU)
 	#$(PRG) : $(OBJ)
 	#$(F90) -pg $(OBJ) $(JDIR) $(LIB) -o $(PRG)     # for gpu version
 else
-  all : libglapack_cpu.so libgblas_cpu.so
+  all : libglapack_cpu.so          #libgblas_cpu.so
 
   libglapack_cpu.so : $(OBJ)	
 	$(F90) $(SHARED) $(OBJ) $(LIB) -o libglapack_cpu.so            # for cpu version
@@ -62,13 +61,13 @@ endif
 #endif
 
 $(OBJD)/cublasXt.o : cublasXt.f90
-	$(F90) $(FCOPT) $(INC) cublasXt.f90 $(JDIR) -o $(OBJD)/cublasXt.o
+	$(F90) $(FCOPT) $(INC) cublasXt.f90 -o $(OBJD)/cublasXt.o
 	
 $(OBJD)/glapack.o : glapack.f90
-	$(F90) $(FCOPT) $(INC) glapack.f90 $(JDIR) -o $(OBJD)/glapack.o
+	$(F90) $(FCOPT) $(INC) glapack.f90 -o $(OBJD)/glapack.o
 
-$(OBJD)/fortran.o : $(CUDADIR)/src/fortran.c
-	$(CC) $(CCOPT) $(CUDADIR)/src/fortran.c $(CUDAINC) -DCUBLAS_GFORTRAN -o $(OBJD)/fortran.o
+$(OBJD)/fortran.o : /usr/local/cuda-$(CUDAVER)/src/fortran.c
+	$(CC) $(CCOPT) /usr/local/cuda-$(CUDAVER)/src/fortran.c $(CUDAINC) -DCUBLAS_GFORTRAN -o $(OBJD)/fortran.o
 
 #ifneq ($(F90),pgf90)		
 #$(OBJD)/fortran.o : $(CSRC)       # for getting fortran interface for cublas
@@ -76,8 +75,22 @@ $(OBJD)/fortran.o : $(CUDADIR)/src/fortran.c
 #endif
 
 install :
-	cp libglapack.so $(INSTLIBDIR)
-	cp glapack.mod $(INSTINCDIR)
+ifeq ($(VER),GPU)
+	cp libglapack_gpu.so $(INSTLIBDIR)
+	cp $(JDIR)/glapack.mod $(INSTINCDIR)
+else
+	cp libglapack_cpu.so $(INSTLIBDIR)
+	cp $(JDIR)/glapack.mod $(INSTINCDIR)
+endif
+
+depend .depend :
+ifeq ($(VER),GPU)
+	makedepf90 -b $(OBJD) -DMAGMA $(FSRC)  > .depend
+else
+	makedepf90 -b $(OBJD) $(FSRC)  > .depend
+endif
 
 clean :
 	rm -f libglapack_*.so libgblas_*.so $(OBJD)/*.mod *.mod $(OBJ)
+
+include .depend
