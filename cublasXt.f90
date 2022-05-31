@@ -22,12 +22,14 @@ module cublasXt
 
   interface cublasXt_Create
     subroutine cublasXt_Create(handle) bind(C,name='cublasXtCreate')
+      use iso_c_binding
       integer handle
     end subroutine
   end interface
 
   interface cublasXt_sgemm
     integer function cublasXt_sgemm(handle,transa,transb,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc) bind(C,name='cublasXtSgemm')
+      use iso_c_binding
       integer handle
       integer transa, transb
       integer m, n, k
@@ -44,6 +46,7 @@ module cublasXt
 
   interface cublasXt_dgemm
     integer function cublasXt_dgemm(handle,transa,transb,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc) bind(C,name='cublasXtDgemm')
+      use iso_c_binding
       integer handle
       integer transa, transb
       integer m, n, k
@@ -60,6 +63,7 @@ module cublasXt
 
   interface cublasXt_cgemm
     integer function cublasXt_cgemm(handle,transa,transb,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc) bind(C,name='cublasXtCgemm')
+      use iso_c_binding
       integer handle
       integer transa, transb
       integer m, n, k
@@ -76,6 +80,7 @@ module cublasXt
 
   interface cublasXt_zgemm
     integer function cublasXt_zgemm(handle,transa,transb,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc) bind(C,name='cublasXtZgemm')
+      use iso_c_binding
       integer handle
       integer transa, transb
       integer m, n, k
@@ -93,6 +98,7 @@ module cublasXt
 
   interface cublasXt_strsm
     integer function cublasXt_strsm(handle,side,uplo,trans,diag,m,n,alpha,A,lda,B,ldb) bind(C,name='cublasXtStrsm')
+      use iso_c_binding
       integer handle
       integer side
       integer uplo
@@ -109,6 +115,7 @@ module cublasXt
 
   interface cublasXt_dtrsm
     integer function cublasXt_dtrsm(handle,side,uplo,trans,diag,m,n,alpha,A,lda,B,ldb) bind(C,name='cublasXtDtrsm')
+      use iso_c_binding
       integer handle
       integer side
       integer uplo
@@ -125,6 +132,7 @@ module cublasXt
 
   interface cublasXt_ctrsm
     integer function cublasXt_ctrsm(handle,side,uplo,trans,diag,m,n,alpha,A,lda,B,ldb) bind(C,name='cublasXtCtrsm')
+      use iso_c_binding
       integer handle
       integer side
       integer uplo
@@ -141,6 +149,7 @@ module cublasXt
 
   interface cublasXt_ztrsm
     integer function cublasXt_ztrsm(handle,side,uplo,trans,diag,m,n,alpha,A,lda,B,ldb) bind(C,name='cublasXtZtrsm')
+      use iso_c_binding
       integer handle
       integer side
       integer uplo
