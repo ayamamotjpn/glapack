@@ -80,7 +80,7 @@ ifeq ($(F90),gfortran)
    FPIC = -fPIC
    FPP = -cpp
    MJ = -J$(JDIR)
-   MKL = -L/usr/lib64 -lblas -L$(HOME)/lib
+   MKL = -L$(HOME)/lib -lblas
 endif
 
 ifeq ($(F90),pgf90)
@@ -88,7 +88,7 @@ ifeq ($(F90),pgf90)
    FPIC = --compiler-options '-fPIC'
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
-   MKL = -L/usr/lib64 -lblas -L$(HOME)/lib
+   MKL = -L$(HOME)/lib -lblas
 endif
 
 ifeq ($(F90),nvfortran)
@@ -96,7 +96,7 @@ ifeq ($(F90),nvfortran)
    FPIC = -fPIC
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
-   MKL = -L/usr/lib64 -lblas -L$(HOME)/lib
+   MKL = -L$(HOME)/lib -lblas
 endif
 
 
