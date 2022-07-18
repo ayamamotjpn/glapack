@@ -61,13 +61,16 @@ endif
 #endif
 
 $(OBJD)/cublasXt.o : cublasXt.f90
-	$(F90) $(FCOPT) $(INC) cublasXt.f90 -o $(OBJD)/cublasXt.o
+	$(F90) $(FCOPT) $(INC) cublasXt.f90 -o $@
 	
-$(OBJD)/glapack.o : glapack.f90
-	$(F90) $(FCOPT) $(INC) glapack.f90 -o $(OBJD)/glapack.o
+$(OBJD)/glapack.o : $(MKLBLAS) glapack.f90
+	$(F90) $(FCOPT) $(INC) glapack.f90 -o $@
+
+$(OBJD)/mkl_blas.o : $(MKLBLAS)
+	$(F90) $(FCOPT) $(INC) $(MKLBLAS) -o $@
 
 $(OBJD)/fortran.o : /usr/local/cuda-$(CUDAVER)/src/fortran.c
-	$(CC) $(CCOPT) /usr/local/cuda-$(CUDAVER)/src/fortran.c $(CUDAINC) -DCUBLAS_GFORTRAN -o $(OBJD)/fortran.o
+	$(CC) $(CCOPT) /usr/local/cuda-$(CUDAVER)/src/fortran.c $(CUDAINC) -DCUBLAS_GFORTRAN -o $@
 
 #ifneq ($(F90),pgf90)		
 #$(OBJD)/fortran.o : $(CSRC)       # for getting fortran interface for cublas

@@ -1,5 +1,5 @@
-VER = GPU
-#VER = CPU
+#VER = GPU
+VER = CPU
 
 ##########################################################
 ########## Select F90 compiler and flags  (Mandatory) 
@@ -15,14 +15,14 @@ PG = -pg
 PG =
 
 # chose fortran compiler
-F90 = ifort
-#F90 = gfortran
+#F90 = ifort
+F90 = gfortran
 #F90 = pgf90
 #F90 = nvfortran
 
 # chose c compiler
-#CC = gcc
-CC = icc
+CC = gcc
+#CC = icc
 #CC = pgcc
 #CC = nvcc
 #CFLAGS =
@@ -58,8 +58,10 @@ GSL = /usr/lib64          # use system libgsl for fedora
 GSLLIB = -L$(GSL) -lgsl -lgslcblas
 
 MAGMAROOT = /usr/local/magma-2.6.2
-MAGMAINC = -I$(MAGMAROOT)/include
+MAGMAINC = -I$(MAGMAROOT)/include/$(INSD)
 MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
+
+NKLROOT = /opt/intel/oneapi/mkl/2022.1.0
 
 # for -DCUDAFOR (only for nvfortran or pgf90)
 # CUBLASINC = -I//usr/local/cuda-$(CUDAVER)/targets/x86_64-linux/include
@@ -69,7 +71,8 @@ ifeq ($(F90),ifort)
    FPIC = -fPIC
    FPP = -fpp
    MJ = -J$(JDIR)
-   MKL = -L/opt/intel/mkl/lib/intel64 -L/opt/intel/lib/intel64 -L/usr/lib64 -lblas        # for -lpthread -lm -ldl
+   MKL = -L/opt/intel/mkl/lib/intel64 -L/opt/intel/lib/intel64 -L/usr/lib64
+   MKLBLAS = $(MKLROOT)/include/mkl_spblas.f90
 endif
 
 ifeq ($(F90),gfortran)
@@ -98,9 +101,9 @@ endif
 
 
 INSTLIBDIR=/usr/local/lib/$(INSD)
-INSTINCDIR=/usr/local/include/$(INCD)
-MAGMAINC = -I$(MAGMAROOT)/include
-MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
+INSTINCDIR=/usr/local/include/$(INSD)
+#MAGMAINC = -I$(MAGMAROOT)/include
+#MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
 
 ifeq ($(VER),GPU)
    LIB =  $(MAGMALIB) $(CUDALIB) $(FGSLLIB) $(GSLLIB) $(MKL)   # for magma
