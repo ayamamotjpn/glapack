@@ -1,5 +1,5 @@
-#VER = GPU
-VER = CPU
+VER = GPU
+#VER = CPU
 
 ##########################################################
 ########## Select F90 compiler and flags  (Mandatory) 
@@ -32,8 +32,10 @@ CC = gcc
 
 # for using magma.moc in MAGMA ifort version user ifort
 ifeq ($(VER),GPU)
-   F90 = ifort
-   CC = icc
+#   F90 = ifort
+#   CC = icc
+    F90 = gfortran
+    CC = gcc
 endif
 
 ifeq ($(F90),ifort)
@@ -59,7 +61,7 @@ MKLINC = -I$(MKLROOT)/include
 GSL = $(HOME)/lib # own libgsl and libgslcblas
 GSLLIB = -L$(GSL) -lgsl -lgslcblas
 
-MAGMAROOT = $(HOME)/magma-2.6.2
+MAGMAROOT = $(HOME)
 MAGMAINC = -I$(MAGMAROOT)/include/$(INSD)
 MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
 
