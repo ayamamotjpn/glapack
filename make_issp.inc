@@ -46,7 +46,8 @@ CUDAVER = 11.6
 CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.2
 CUDADIR = $(CUDAHOME)/cuda-$(CUDAVER)
 CUDALIB = -L$(CUDADIR)/lib64 -lcublas -lcudart
-CUDAINC = -I$(CUDAHOME)/math_libs/$(CUDAVER)/src
+CUDAFRT = $(CUDAHOME)/math_libs/$(CUDAVER)/src
+CUDAINC = -I$(CUDAFRT)
 
 FGSLINC = -I$(HOME)/local/include/$(INSD)/fgsl -I$(HOME)/cuda-11.6/src
 FGSLLIB = -L$(HOME)/local/lib/$(INSD) -lfgsl

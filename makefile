@@ -26,7 +26,7 @@ endif
 
 
 MAGMABLAS = $(MAGMAROOT)/control/magmablas_   # for magmablasf interface
-INCC = $(CUDAINC) -I$(CUDADIR)/src -I./       #for using fortran.c fortran interface of cublas
+INCC = $(CUDAINC) $(CUDADIRINC) -I./          #for using fortran.c fortran interface of cublas
 
 #all : libglapack.so libgblas.so
 
@@ -69,8 +69,8 @@ $(OBJD)/glapack.o : $(MKLBLAS) glapack.f90
 $(OBJD)/mkl_blas.o : $(MKLBLAS)
 	$(F90) $(FCOPT) $(INC) $(MKLBLAS) -o $@
 
-$(OBJD)/fortran.o : /home/app/cuda-$(CUDAVER)/src/fortran.c
-	$(CC) $(CCOPT) $(HOME)/local/cuda-$(CUDAVER)/src/fortran.c $(CUDAINC) -DCUBLAS_GFORTRAN -o $@
+$(OBJD)/fortran.o : $(CUDAFRT)/fortran.c
+	$(CC) $(CCOPT) $(CUDAFRT)/fortran.c $(CRDAINC) -DCUBLAS_GFORTRAN -o $@
 
 #ifneq ($(F90),pgf90)		
 #$(OBJD)/fortran.o : $(CSRC)       # for getting fortran interface for cublas
