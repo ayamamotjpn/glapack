@@ -9,9 +9,9 @@ VER = GPU
 OBJD = obj_86
 JDIR = obj_86
 IDIR = -I$(JDIR)
-HOME=/home/k0609/k060901
+
 MKLROOT = /home/app/oneapi/mkl/2022.1.0
-NVROOT = /opt/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers
+NVROOT = /home/app/hpc_sdk/Linux_x86_64/22.3/compilers
 
 # for profiler
 PG = -pg
@@ -19,24 +19,16 @@ PG =
 
 # chose fortran compiler
 #F90 = ifort
-F90 = gfortran
+#F90 = gfortran
 #F90 = pgf90
-#F90 = nvfortran
+F90 = nvfortran
 
 # chose c compiler
-CC = gcc
-#CC = icc
+#CC = gcc
+CC = icc
 #CC = pgcc
 #CC = nvcc
 #CFLAGS =
-
-# for using magma.moc in MAGMA ifort version user ifort
-ifeq ($(VER),GPU)
-#   F90 = ifort
-#   CC = icc
-    F90 = gfortran
-    CC = gcc
-endif
 
 ifeq ($(F90),ifort)
   INSD = intel
@@ -75,24 +67,18 @@ ifeq ($(F90),ifort)
    MJ = -J$(JDIR)
    MKL = -L$(MKLROOT)/lib/intel64 -L$(HOME)/lib
    MKLBLAS = $(MKLROOT)/include/mkl_spblas.f90
-endif
-
-ifeq ($(F90),gfortran)
+else ifeq ($(F90),gfortran)
    INSD = gnu
    FPIC = -fPIC
    FPP = -cpp
    MJ = -J$(JDIR)
-endif
-
-ifeq ($(F90),pgf90)
+else ifeq ($(F90),pgf90)
    INSD = pgi
    FPIC = --compiler-options '-fPIC'
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
-endif
-
-ifeq ($(F90),nvfortran)
-   INSD = pgi
+else ifeq ($(F90),nvfortran)
+   INSD = nvidia
    FPIC = -fPIC
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
@@ -142,7 +128,7 @@ ifeq ($(F90),pgf90)
       CUDAFOR =
       OPT = -O3 
     endif
-    SHARED = -shared    # -Bdynamic
+    SHARED = -shared
 endif
 
 ifeq ($(F90),nvfortran)
@@ -156,7 +142,7 @@ ifeq ($(F90),nvfortran)
       CUDAFOR =  
       OPT = -O3
     endif
-    SHARED = -shared    # -Bdynamic
+    SHARED = -shared
 endif
 
 
