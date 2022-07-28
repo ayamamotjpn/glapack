@@ -1,0 +1,6 @@
+
+fortran.c necessary for glapack is not included in
+/home/app/hpc_sdk/cuda/src which are included 
+in /home/kugui/k0609/k060901/cuda-11.6 toolkit
+so we cannt use module nvhpc-ompi/22.2 in kugui
+

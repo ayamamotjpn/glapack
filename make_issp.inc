@@ -41,7 +41,7 @@ else ifeq ($(F90),pgf90)
 endif
 
 CUDAVER = 11.6
-CUDADIR = /home/app/cuda-$(CUDAVER)
+CUDADIR = $(HOME)/cuda-$(CUDAVER)
 CUDALIB = -L$(CUDADIR)/lib64 -lcublas -lcudart
 CUDAINC =-I$(CUDADIR)/include
 
@@ -74,12 +74,14 @@ else ifeq ($(F90),gfortran)
    MJ = -J$(JDIR)
 else ifeq ($(F90),pgf90)
    INSD = pgi
-   FPIC = -Xcompiler -fPIC 
+   #FPIC = -Xcompiler -fPIC
+   FPIC = -fPIC 
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
 else ifeq ($(F90),nvfortran)
    INSD = nvidia
-   FPIC = -Xcompiler -fPIC 
+   #FPIC = -Xcompiler -fPIC
+   FPIC = -fPIC      
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
 endif
