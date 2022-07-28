@@ -4,7 +4,6 @@ ARC = 86
 OBJD = obj_$(ARC)
 BIND = bin_$(ARC)
 CUD = $(shell pwd)
-HOME = /home/k0609/k060901
 
 #swp_band2d_g : $(PRG)
 

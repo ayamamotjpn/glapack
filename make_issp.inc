@@ -74,12 +74,12 @@ else ifeq ($(F90),gfortran)
    MJ = -J$(JDIR)
 else ifeq ($(F90),pgf90)
    INSD = pgi
-   FPIC = --compiler-options '-fPIC'
+   FPIC = -Xcompiler -fPIC 
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
 else ifeq ($(F90),nvfortran)
    INSD = nvidia
-   FPIC = --compiler-options '-fPIC'
+   FPIC = -Xcompiler -fPIC 
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
 endif
