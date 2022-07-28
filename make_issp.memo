@@ -4,3 +4,5 @@ fortran.c necessary for glapack is not included in
 in /home/kugui/k0609/k060901/cuda-11.6 toolkit
 so we cannt use module nvhpc-ompi/22.2 in kugui
 
+/home/app/cuda-11.6/src is not a directory
+

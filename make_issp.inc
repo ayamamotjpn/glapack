@@ -11,7 +11,7 @@ JDIR = obj_86
 IDIR = -I$(JDIR)
 
 MKLROOT = /home/app/oneapi/mkl/2022.1.0
-NVROOT = /home/app/hpc_sdk/Linux_x86_64/22.3/compilers
+NVROOT = /home/app/hpc_sdk/Linux_x86_64/22.2/compilers
 
 # for profiler
 PG = -pg
@@ -40,12 +40,15 @@ else ifeq ($(F90),pgf90)
   INSD = pgi
 endif
 
+#CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.5
+#CUDADVWE=11.7
 CUDAVER = 11.6
-CUDADIR = $(HOME)/cuda-$(CUDAVER)
+CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.2
+CUDADIR = $(CUDAHOME)/cuda-$(CUDAVER)
 CUDALIB = -L$(CUDADIR)/lib64 -lcublas -lcudart
-CUDAINC =-I$(CUDADIR)/include
+CUDAINC = -I$(CUDAHOME)/math_libs/$(CUDAVER)/src
 
-FGSLINC = -I$(HOME)/local/include/$(INSD)/fgsl
+FGSLINC = -I$(HOME)/local/include/$(INSD)/fgsl -I$(HOME)/cuda-11.6/src
 FGSLLIB = -L$(HOME)/local/lib/$(INSD) -lfgsl
 
 MKLINC = -I$(MKLROOT)/include
@@ -58,7 +61,7 @@ MAGMAINC = -I$(MAGMAROOT)/include/$(INSD)
 MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
 
 # for -DCUDAFOR (only for nvfortran or pgf90)
-# CUBLASINC = -I$(HOME)/local/cuda-$(CUDAVER)/targets/x86_64-linux/include
+# CUBLASINC = -I$(CUDAHOME)/cuda-$(CUDAVER)/targets/x86_64-linux/include
 
 ifeq ($(F90),ifort)
    INSD = intel
@@ -86,7 +89,7 @@ else ifeq ($(F90),nvfortran)
    MJ = -module $(JDIR)
 endif
 
-   MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 
 INSTLIBDIR=$(HOME)/lib/$(INSD)
@@ -96,7 +99,7 @@ INSTINCDIR=$(HOME)/include/$(INSD)
 
 ifeq ($(VER),GPU)
    LIB =  $(MAGMALIB) $(CUDALIB) $(FGSLLIB) $(GSLLIB) $(MKL)   # for magma
-   INC = $(FGSLINC) $(FEASTINC_GPU) $(MAGMAINC) $(CUBLASINC) -I$(JDIR)  # for gpu version fgsl.mod  FEAST_GPU and MAGMA
+   INC = $(FGSLINC) $(FEASTINC_GPU) $(MAGMAINC) $(CUBLASINC) $(CUDAINC) -I$(JDIR)  # for gpu version fgsl.mod  FEAST_GPU fortran.c and MAGMA
 else
    LIB =  $(FGSLLIB) $(GSLLIB) $(MKL)    # for ifort  cpu version  this is better for feast
    INC = $(FGSLINC)  $(MKLINC) -I$(JDIR) # for cpu version fgsl.mod
