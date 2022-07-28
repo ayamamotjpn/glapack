@@ -25,9 +25,9 @@ F90 = nvfortran
 
 # chose c compiler
 #CC = gcc
-CC = icc
+#CC = icc
 #CC = pgcc
-#CC = nvcc
+CC = nvcc
 #CFLAGS =
 
 ifeq ($(F90),ifort)
@@ -35,30 +35,30 @@ ifeq ($(F90),ifort)
 else ifeq ($(F90),gfortran)
   INSD = gnu
 else ifeq ($(F90),nvfortran)
-  INSD = pgi
+  INSD = nvidia
 else ifeq ($(F90),pgf90)
   INSD = pgi
 endif
 
 CUDAVER = 11.6
-CUDADIR = $(HOME)/cuda-$(CUDAVER)
+CUDADIR = /home/app/cuda-$(CUDAVER)
 CUDALIB = -L$(CUDADIR)/lib64 -lcublas -lcudart
-CUDAINC =-I$(CUDADIR)/include -I$(NVROOT)/include
+CUDAINC =-I$(CUDADIR)/include
 
-FGSLINC = -I$(HOME)/include/$(INSD)/fgsl
-FGSLLIB = -L$(HOME)/lib/$(INSD) -lfgsl
+FGSLINC = -I$(HOME)/local/include/$(INSD)/fgsl
+FGSLLIB = -L$(HOME)/local/lib/$(INSD) -lfgsl
 
 MKLINC = -I$(MKLROOT)/include
 
 GSL = $(HOME)/lib # own libgsl and libgslcblas
 GSLLIB = -L$(GSL) -lgsl -lgslcblas
 
-MAGMAROOT = $(HOME)
+MAGMAROOT = $(HOME)/local
 MAGMAINC = -I$(MAGMAROOT)/include/$(INSD)
 MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
 
 # for -DCUDAFOR (only for nvfortran or pgf90)
-# CUBLASINC = -I//usr/local/cuda-$(CUDAVER)/targets/x86_64-linux/include
+# CUBLASINC = -I$(HOME)/local/cuda-$(CUDAVER)/targets/x86_64-linux/include
 
 ifeq ($(F90),ifort)
    INSD = intel
@@ -79,7 +79,7 @@ else ifeq ($(F90),pgf90)
    MJ = -module $(JDIR)
 else ifeq ($(F90),nvfortran)
    INSD = nvidia
-   FPIC = -fPIC
+   FPIC = --compiler-options '-fPIC'
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
 endif
@@ -123,7 +123,7 @@ ifeq ($(F90),pgf90)
       #CUDAFOR = -Mcuda   # for using cuda fortran but also can use fortran.c
       CUDAFOR =
       #OPT = -g  -traceback  $(CUDAFOR)    #-dclchk -chkptr  -chkstk
-      OPT = -O3 -mp $(CUDAFOR)
+      OPT = -O3  $(CUDAFOR)
     else
       CUDAFOR =
       OPT = -O3 
@@ -137,7 +137,7 @@ ifeq ($(F90),nvfortran)
       #CUDAFOR = -Mcuda   # for using cuda fortran but also can use fortran.c
       CUDAFOR =
       #OPT = -g  -traceback  $(CUDAFOR)    #-dclchk -chkptr  -chkstk
-      OPT = -O3 -mp $(CUDAFOR)
+      OPT = -O3  $(CUDAFOR)
     else
       CUDAFOR =  
       OPT = -O3
