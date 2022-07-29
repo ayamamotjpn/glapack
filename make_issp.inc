@@ -43,8 +43,10 @@ endif
 #CUDADVWE=11.7
 CUDAVER = 11.6
 CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.2
-CUDADIR = $(CUDAHOME)/cuda-$(CUDAVER)
-CUDALIB = -L$(CUDADIR)/lib64 -lcublas -lcudart
+
+CUDADIR0 = $(CUDAHOME)/cuda/$(CUDAVER)/targets/x86_64-linux
+CUDADIR = $(CUDAHOME)/math_libs/$(CUDAVER)
+CUDALIB = -L$(CUDADIR)/lib64 -lcublas -L$(CUDADIR0)/lib -lcudart
 CUDAFRT = $(CUDAHOME)/math_libs/$(CUDAVER)/src
 CUDAINC = -I$(CUDAFRT)
 
