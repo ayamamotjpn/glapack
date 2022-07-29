@@ -39,10 +39,10 @@ else ifeq ($(F90),pgf90)
   INSD = pgi
 endif
 
-#CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.5
-#CUDADVWE=11.7
-CUDAVER = 11.6
-CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.2
+CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.5
+CUDADVWE=11.7
+#CUDAVER = 11.6
+#CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.2
 
 CUDADIR0 = $(CUDAHOME)/cuda/$(CUDAVER)/targets/x86_64-linux
 CUDADIR = $(CUDAHOME)/math_libs/$(CUDAVER)
@@ -107,9 +107,9 @@ INSTINCDIR=$(HOME)/include/$(INSD)
 
 ifeq ($(VER),GPU)
    LIB =  $(MAGMALIB) $(CUDALIB) $(FGSLLIB) $(GSLLIB) $(MKL)   # for magma
-   INC = $(FGSLINC) $(FEASTINC_GPU) $(MAGMAINC) $(CUBLASINC) $(CUDAINC) -I$(JDIR)  # for gpu version fgsl.mod  FEAST_GPU fortran.c and MAGMA
+   INC = $(FGSLINC) $(FEASTINC_GPU) $(MAGMAINC) $(CUBLASINC) $(CUDAINC) -I$(JDIR) # for gpu version fgsl.mod  FEAST_GPU fortran.c and MAGMA
 else
-   LIB =  $(FGSLLIB) $(GSLLIB) $(MKL)    # for ifort  cpu version  this is better for feast
+   LIB =  $(FGSLLIB) $(GSLLIB) $(MKL)
    INC = $(FGSLINC)  $(MKLINC) -I$(JDIR) # for cpu version fgsl.mod
 endif
 

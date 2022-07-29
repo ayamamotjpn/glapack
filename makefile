@@ -41,7 +41,9 @@ ifeq ($(VER),GPU)
 	$(CC) $(SHARED) $(OBJD)/fortran.o $(LIB) -o libgblas_gpu.so
 	#$(PRG) : $(OBJ)
 	#$(F90) -pg $(OBJ) $(JDIR) $(LIB) -o $(PRG)     # for gpu version
+
 else
+
   all : libglapack_cpu.so          #libgblas_cpu.so
 
   libglapack_cpu.so : $(OBJ)	
