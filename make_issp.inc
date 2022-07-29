@@ -28,7 +28,6 @@ F90 = nvfortran
 #CC = icc
 #CC = pgcc
 CC = nvcc
-#CFLAGS =
 
 ifeq ($(F90),ifort)
   INSD = intel
@@ -88,6 +87,12 @@ else ifeq ($(F90),nvfortran)
    FPIC = -fPIC      
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
+endif
+
+ifeq ($(CC),nvcc)
+   CFLAGS = -Xcompiler -fPIC
+else
+   CFLAGS = $(FPIC)
 endif
 
 MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
@@ -154,7 +159,7 @@ endif
 
 DEVPTR = -Dmagma_devptr_t="integer(kind=8)"
 FCOPT = -c $(OPT) $(PG) $(FPP) $(FPIC) $(IDIR) $(MJ) $(DEVPTR) -fPIC
-CCOPT = -c $(OPT) $(PG) $(CFLAGS) $(FPIC) 
+CCOPT = -c $(OPT) $(PG) $(CFLAGS)
 
 ifeq ($(VER),GPU)
    FCOPT += -DMAGMA
