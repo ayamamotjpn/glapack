@@ -50,7 +50,7 @@ CUDALIB = -L$(CUDADIR)/lib64 -lcublas -L$(CUDADIR0)/lib -lcudart
 CUDAFRT = $(CUDAHOME)/math_libs/$(CUDAVER)/src
 CUDAINC = -I$(CUDAFRT)
 
-FGSLINC = -I$(HOME)/local/include/$(INSD)/fgsl -I$(HOME)/cuda-11.6/src
+FGSLINC = -I$(HOME)/local/include/$(INSD)/fgsl -I$(HOME)/cuda-$(CUDAVER)/src
 FGSLLIB = -L$(HOME)/local/lib/$(INSD) -lfgsl
 
 MKLINC = -I$(MKLROOT)/include
