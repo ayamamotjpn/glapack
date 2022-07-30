@@ -1,3 +1,4 @@
-cp libglapack_cpu.so /usr/local/glapack/lib/gnu
-cp glapack.mod /usr/local/glapack/include/gnu
-cp libgblas_cpu.so /usr/local/glapack/lib/gnu
+cp libglapack_gpu.so $HOME/local/lib/gnu
+cp obj_86/glapack.mod $HOME/local/include/gnu
+cp libgblas_gpu.so $HOME/local/lib/gnu
+cp obj_86/cublasxt.mod $HOME/local/include/gnu

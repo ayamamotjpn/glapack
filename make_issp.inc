@@ -19,9 +19,9 @@ PG =
 
 # chose fortran compiler
 #F90 = ifort
-#F90 = gfortran
+F90 = gfortran
 #F90 = pgf90
-F90 = nvfortran
+#F90 = nvfortran
 
 # chose c compiler
 #CC = gcc
@@ -132,7 +132,7 @@ ifeq ($(F90),gfortran)
 endif
 
 ifeq ($(F90),pgf90)
-	ifeq ($(VER),GPU)
+    ifeq ($(VER),GPU)
       #CUDAFOR = -DCUDAFOR  -Mcuda   # for using cuda fortran but also can use fortran.c
       #CUDAFOR = -Mcuda   # for using cuda fortran but also can use fortran.c
       CUDAFOR =
