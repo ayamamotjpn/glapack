@@ -1,0 +1,7 @@
+libatomic is necessary
+
+do
+
+sudo dnf install libatomic
+
+for installing libatomic in fedora
