@@ -39,8 +39,8 @@ else ifeq ($(F90),pgf90)
   INSD = pgi
 endif
 
-CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.5
-CUDADVWE=11.7
+CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.7
+CUDAVER = 11.7
 #CUDAVER = 11.6
 #CUDAHOME= /home/app/hpc_sdk/Linux_x86_64/22.2
 
