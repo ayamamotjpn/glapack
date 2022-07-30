@@ -24,7 +24,6 @@ ifeq ($(VER),GPU)
 	FSRC += cublasXt.f90
 endif
 
-
 MAGMABLAS = $(MAGMAROOT)/control/magmablas_   # for magmablasf interface
 INCC = $(CUDAINC) $(CUDADIRINC) -I./          #for using fortran.c fortran interface of cublas
 
