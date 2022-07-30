@@ -18,8 +18,8 @@ PG = -pg
 PG =
 
 # chose fortran compiler
-#F90 = ifort
-F90 = gfortran
+F90 = ifort
+#F90 = gfortran
 #F90 = pgf90
 #F90 = nvfortran
 
@@ -59,7 +59,7 @@ MKLINC = -I$(MKLROOT)/include
 GSL = $(HOME)/lib # own libgsl and libgslcblas
 GSLLIB = -L$(GSL) -lgsl -lgslcblas
 
-MAGMAROOT = $(HOME)/local
+MAGMAROOT = $(HOME)/local/magma-2.6.2
 MAGMAINC = -I$(MAGMAROOT)/include/$(INSD)
 MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
 
@@ -70,7 +70,7 @@ ifeq ($(F90),ifort)
    INSD = intel
    FPIC = -fPIC
    FPP = -fpp
-   MJ = -J$(JDIR)
+   MJ = -module $(JDIR)
    MKL = -L$(MKLROOT)/lib/intel64 -L$(HOME)/lib
    MKLBLAS = $(MKLROOT)/include/mkl_spblas.f90
 else ifeq ($(F90),gfortran)
@@ -94,8 +94,13 @@ endif
 
 ifeq ($(CC),nvcc)
    CFLAGS = -Xcompiler -fPIC
-else
-   CFLAGS = $(FPIC)
+   COPT = -O2
+else ifeq ($(CC),g++)
+   CFLAGS = $(FPIC) -fopenmp
+   COPT = -O2
+else ifeq ($(CC),icpc)
+   CFLAGS = $(FPIC) -qopenmp
+   COPT = -O2
 endif
 
 MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
@@ -103,8 +108,6 @@ MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 INSTLIBDIR=$(HOME)/lib/$(INSD)
 INSTINCDIR=$(HOME)/include/$(INSD)
-#MAGMAINC = -I$(MAGMAROOT)/include
-#MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
 
 ifeq ($(VER),GPU)
    LIB =  $(MAGMALIB) $(CUDALIB) $(FGSLLIB) $(GSLLIB) $(MKL)   # for magma
@@ -137,10 +140,10 @@ ifeq ($(F90),pgf90)
       #CUDAFOR = -Mcuda   # for using cuda fortran but also can use fortran.c
       CUDAFOR =
       #OPT = -g  -traceback  $(CUDAFOR)    #-dclchk -chkptr  -chkstk
-      OPT = -O3  $(CUDAFOR)
+      OPT = -O3  $(CUDAFOR) -mp
     else
       CUDAFOR =
-      OPT = -O3 
+      OPT = -O3  -mp
     endif
     SHARED = -shared
 endif
@@ -151,10 +154,10 @@ ifeq ($(F90),nvfortran)
       #CUDAFOR = -Mcuda   # for using cuda fortran but also can use fortran.c
       CUDAFOR =
       #OPT = -g  -traceback  $(CUDAFOR)    #-dclchk -chkptr  -chkstk
-      OPT = -O3  $(CUDAFOR)
+      OPT = -O3  $(CUDAFOR) -mp
     else
       CUDAFOR =  
-      OPT = -O3
+      OPT = -O3 -mp
     endif
     SHARED = -shared
 endif
@@ -162,7 +165,7 @@ endif
 
 DEVPTR = -Dmagma_devptr_t="integer(kind=8)"
 FCOPT = -c $(OPT) $(PG) $(FPP) $(FPIC) $(IDIR) $(MJ) $(DEVPTR) -fPIC
-CCOPT = -c $(OPT) $(PG) $(CFLAGS)
+CCOPT = -c $(COPT) $(PG) $(CFLAGS)
 
 ifeq ($(VER),GPU)
    FCOPT += -DMAGMA
