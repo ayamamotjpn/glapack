@@ -59,7 +59,7 @@ MKLINC = -I$(MKLROOT)/include
 GSL = $(HOME)/lib # own libgsl and libgslcblas
 GSLLIB = -L$(GSL) -lgsl -lgslcblas
 
-MAGMAROOT = $(HOME)/local/magma-2.6.2
+MAGMAROOT = $(HOME)/local
 MAGMAINC = -I$(MAGMAROOT)/include/$(INSD)
 MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
 
