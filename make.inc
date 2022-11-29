@@ -1,1 +1,1 @@
-make_issp.inc
+make.inc_cpu

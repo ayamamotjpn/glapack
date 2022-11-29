@@ -9,9 +9,6 @@ OBJD = obj_86
 JDIR = obj_86
 IDIR = -I$(JDIR)
 
-MKLROOT = /home/app/oneapi/mkl/2022.1.0
-#NVROOT = /home/app/hpc_sdk/Linux_x86_64/22.2/compilers
-
 # for profiler
 PG = -pg
 PG =
@@ -52,9 +49,11 @@ ifeq ($(F90),ifort)
    FPIC = -fPIC
    FPP = -fpp
    MJ = -module $(JDIR)
-   MKL = -L$(MKLROOT)/lib/intel64 -L$(HOME)/lib
+   MKLROOT = $(HOME)/app/oneapi/mkl/2022.1.0
+   MKL = -L$(MKLROOT)/lib -L$(HOME)/lib
    MKLBLAS = $(MKLROOT)/include/mkl_spblas.f90
    MKLINC = -I$(MKLROOT)/include
+   MKL += -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 else ifeq ($(F90),gfortran)
    INSD = gnu
    FPIC = -fPIC
@@ -66,12 +65,14 @@ else ifeq ($(F90),pgf90)
    FPIC = -fPIC 
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
+   NVROOT = /home/app/hpc_sdk/Linux_x86_64/22.2/compilers
 else ifeq ($(F90),nvfortran)
    INSD = nvidia
    #FPIC = -Xcompiler -fPIC
    FPIC = -fPIC      
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
+   NVROOT = /home/app/hpc_sdk/Linux_x86_64/22.2/compilers
 endif
 
 ifeq ($(CC),nvcc)
@@ -85,8 +86,8 @@ else ifeq ($(CC),icpc)
    COPT = -O2
 endif
 
-MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
-LAPACK = -L/usr/local/Cellar/openblas/0.3.13/lib -llapack
+
+LAPACK = -L/usr/local/Cellar/lapack/3.10.1_1/lib -llapack -lblas
 
 INSTLIBDIR=$(HOME)/lib/$(INSD)
 INSTINCDIR=$(HOME)/include/$(INSD)
@@ -97,15 +98,15 @@ INC = $(FGSLINC)  $(MKLINC) -I$(JDIR) # for cpu version fgsl.mod
 
 # optimization flag
 ifeq ($(F90),ifort)
-    #OPT = -g -check all -traceback
-    OPT = -O3 -qopenmp
+    OPT = -g -check all -traceback
+    #OPT = -O3 -qopenmp
     #OPT = -O3
     SHARED = -shared
 endif
 
 ifeq ($(F90),gfortran)
-    #OPT = -g -fcheck=all
-    OPT = -O3 -fopenmp
+    OPT = -g -fcheck=all
+    #OPT = -O3 -fopenmp
     #OPT = -O3
     SHARED = -shared
 endif
