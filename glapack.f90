@@ -617,16 +617,19 @@ contains
     integer,allocatable :: iwork(:)
     integer :: info
     allocate(work(1),rwork(1),w(1))
-    allocate(iwork(1))
+    !allocate(iwork(1))
     lwork  = -1
-    lrwork = -1
-    liwork = -1
+    !lrwork = -1
+    !liwork = -1
     !lrwork=1
     ! calculate work array size used in ev
     call glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork,iwork,liwork,info )
+    if(info/=0) then
+      write(6,*) 'info in glapack_ssyev ',info; stop
+    end if 
     lwork = work(1)
-    lrwork=rwork(1)
-    liwork = iwork(1)
+    !lrwork=rwork(1)
+    !liwork = iwork(1)
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
@@ -644,18 +647,23 @@ contains
     real(8),allocatable:: work(:)
     real(8),allocatable:: rwork(:)
     real(8),allocatable:: w(:)
-    integer,allocatable :: iwork(:)
+    !integer,allocatable :: iwork(:)
+    integer :: iwork(1)
     integer :: info
     allocate(work(1),rwork(1),w(1))
+
     lwork  = -1
-    lrwork = -1
-    liwork = -1
+    !lrwork = -1
+    !liwork = -1
     !lrwork=1
     ! calculate work array size used in ev
     call glapack_dsyev( jobz, uplo, n, A, lda, w, work, lwork,iwork,liwork,info )
+    if(info/=0) then
+      write(6,*) 'info in glapack dsyev ',info; stop
+    end if
     lwork = work(1)
-    lrwork=rwork(1)
-    liwork = iwork(1)
+    !lrwork=rwork(1)
+    !liwork = iwork(1)
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
@@ -678,14 +686,14 @@ contains
     allocate(work(1),rwork(1),w(1))
     allocate(iwork(1))
     lwork  = -1
-    lrwork = -1
-    liwork = -1
+    !lrwork = -1
+    !liwork = -1
     !lrwork=1
     ! calculate work array size used in ev
     call glapack_cheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
     lwork = work(1)
-    lrwork=rwork(1)
-    liwork = iwork(1)
+    !lrwork=rwork(1)
+    !liwork = iwork(1)
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
@@ -708,14 +716,14 @@ contains
     allocate(work(1),rwork(1),w(1))
     allocate(iwork(1))
     lwork  = -1
-    lrwork = -1
-    liwork = -1
+    !lrwork = -1
+    !liwork = -1
     !lrwork=1
     ! calculate work array size used in ev
     call glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
     lwork = work(1)
-    lrwork=rwork(1)
-    liwork = iwork(1)
+    !lrwork=rwork(1)
+    !liwork = iwork(1)
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
@@ -866,7 +874,7 @@ contains
     !call magmaf_ssyevd( jobz, uplo, n, reshape(A,asize), lda, w, work, lwork, iwork, liwork, info )
     call magmaf_ssyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
 #else
-    call ssyev( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    call ssyev( jobz, uplo, n, A, lda, w, work, lwork, info )
 #endif
   end subroutine
 
@@ -890,7 +898,7 @@ contains
     !call magmaf_cheevd( jobz, uplo, n, reshape(A,asize), lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     call magmaf_cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
 #else
-    call cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+    call cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
 #endif
   end subroutine
 
@@ -912,20 +920,20 @@ contains
     !call magmaf_dsyevd( jobz, uplo, n, reshape(A,asize), lda, w, work, lwork, iwork, liwork, info )
     call magmaf_dsyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
 #else
-    call dsyev( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    call dsyev( jobz, uplo, n, A, lda, w, work, lwork, info )
 #endif
   end subroutine
 
   subroutine glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     character        :: jobz
     character        :: uplo
-    integer           :: n
-    complex(8)     :: A(lda,n)
-    integer           :: lda
-    real(8)             :: w(*)
-    complex(8)    :: work(*)
+    integer          :: n
+    complex(8)       :: A(lda,n)
+    integer          :: lda
+    real(8)          :: w(*)
+    complex(8)       :: work(*)
     integer          :: lwork
-    real(8)            :: rwork(*)
+    real(8)          :: rwork(*)
     integer          :: lrwork
     integer          :: iwork(*)
     integer          :: liwork
@@ -936,7 +944,7 @@ contains
     !call magmaf_zheevd( jobz, uplo, n, reshape(A,asize), lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     call magmaf_zheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
 #else
-    call zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+    call zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
 #endif
   end subroutine
 
