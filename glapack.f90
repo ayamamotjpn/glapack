@@ -627,6 +627,7 @@ contains
     if(info/=0) then
       write(6,*) 'info in glapack_ssyev ',info; stop
     end if 
+    print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
     lwork = work(1)
     !lrwork=rwork(1)
     !liwork = iwork(1)
