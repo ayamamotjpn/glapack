@@ -22,8 +22,13 @@ module glapack
   use magma
   use cublasXt
 #endif
-
   implicit none
+
+  integer, private :: ngpu
+
+  interface glapack_init
+    module procedure glapack_init0,glapack_init1
+  end interface
 
   interface glapack_ev_prm
     !module procedure glapack_gev_prm
@@ -75,9 +80,18 @@ module glapack
 
 contains
 
-  subroutine glapack_init()
+  subroutine glapack_init0()
+    ngpu=1
 #ifdef MAGMA
-    call magmaf_init()
+    call magmaf_init(ngpu)
+#endif
+  end subroutine
+
+  subroutine glapack_init1(ngpu_)
+    integer ngpu_
+    ngpu=ngpu_
+#ifdef MAGMA
+    call magmaf_init(ngpu)
 #endif
   end subroutine
 
@@ -634,6 +648,7 @@ contains
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
+    deallocate(work,rwork,w)
   end subroutine
 
   subroutine glapack_dsyev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
@@ -668,6 +683,7 @@ contains
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
+    deallocate(work,rwork,w)
   end subroutine
 
   subroutine glapack_cheev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
@@ -698,6 +714,7 @@ contains
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
+    deallocate(work,rwork,w,iwork)
   end subroutine
 
   subroutine glapack_zheev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
@@ -728,6 +745,7 @@ contains
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
+    deallocate(work,rwork,w,iwork)
   end subroutine
 
   !  ! this estimate waork array size lwork, liwork
@@ -869,11 +887,15 @@ contains
     integer          :: iwork(*)
     integer          :: liwork
     integer          :: info
-    !integer :: asize(1)
-    !asize(1)=size(A)
+      !integer          :: ngpu=1
+      !integer :: asize(1)
+      !asize(1)=size(A)
 #ifdef MAGMA
-    !call magmaf_ssyevd( jobz, uplo, n, reshape(A,asize), lda, w, work, lwork, iwork, liwork, info )
-    call magmaf_ssyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    if(ngpu==1) then
+      call magmaf_ssyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    else
+      call magmaf_ssyevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    end if
 #else
     call ssyev( jobz, uplo, n, A, lda, w, work, lwork, info )
 #endif
@@ -893,11 +915,15 @@ contains
     integer          :: iwork(*)
     integer          :: liwork
     integer          :: info
-    !integer          :: asize(1)
-    !asize(1)=size(A)
+    integer          :: ngpu = 1
+      !integer          :: asize(1)
+      !asize(1)=size(A)
 #ifdef MAGMA
-    !call magmaf_cheevd( jobz, uplo, n, reshape(A,asize), lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
-    call magmaf_cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+    if(ngpu==1) then
+      call magmaf_cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+    else
+      call magmaf_cheevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+    end if
 #else
     call cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
 #endif
@@ -915,11 +941,15 @@ contains
     integer          :: iwork(*)
     integer          :: liwork
     integer          :: info
+    integer          :: ngpu = 1
     !integer          :: asize(1)
     !asize(1)=size(A)
 #ifdef MAGMA
-    !call magmaf_dsyevd( jobz, uplo, n, reshape(A,asize), lda, w, work, lwork, iwork, liwork, info )
-    call magmaf_dsyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    if(ngpu==1) then
+      call magmaf_dsyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    else
+      call magmaf_dsyevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    end if
 #else
     call dsyev( jobz, uplo, n, A, lda, w, work, lwork, info )
 #endif
@@ -939,11 +969,15 @@ contains
     integer          :: iwork(*)
     integer          :: liwork
     integer          :: info
-    !integer          :: asize(1)
-    !asize(1)=size(A)
+    integer          :: ngpu = 1
+     !integer          :: asize(1)
+     !asize(1)=size(A)
 #ifdef MAGMA
-    !call magmaf_zheevd( jobz, uplo, n, reshape(A,asize), lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
-    call magmaf_zheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+    if(ngpu==1) then
+      call magmaf_zheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+    else
+      call magmaf_zheevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+    end if
 #else
     call zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
 #endif
@@ -996,7 +1030,7 @@ contains
     integer          :: m
     integer          :: n
     integer          :: k
-    real               :: A(lda,n)
+    real             :: A(lda,n)
     integer          :: lda
     real               :: tau(*)
     real    :: dT(*)   !magma_devptr_t   :: dT
