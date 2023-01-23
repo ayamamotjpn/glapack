@@ -33,7 +33,11 @@ program jdiagGlapacktst
     write(6,'(20f10.4)') a(i,:)
   end do
 
-  call glapack_init(ngpu)
+  if(ngpu>1) then
+    call glapack_init()
+  else
+    call glapack_init(ngpu)
+  end if
   call jdiagGlapack(lda,n,A,W)
 
   write(6,*) 'w'
@@ -77,7 +81,7 @@ contains
 #else
     !call dsyev('V', 'L', n, A, lda, lwork, lrwork, liwork)
 #endif
-    write(6,'(3i10)') 'lwork,lrwork,liwork=',lwork,lrwork,liwork ! for test
+    write(6,'(a,3i10)') 'lwork,lrwork,liwork=',lwork,lrwork,liwork ! for test
     ! allocate with the new, proper size:
     allocate (work(lwork), IWORK(liwork))        !, stat=status)
     call glapack_ev('V', 'L', n, A, lda, W, WORK, lwork, IWORK, liwork, info)

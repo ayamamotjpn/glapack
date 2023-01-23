@@ -83,7 +83,7 @@ contains
   subroutine glapack_init0()
     ngpu=1
 #ifdef MAGMA
-    call magmaf_init(ngpu)
+    call magmaf_init()
 #endif
   end subroutine
 
@@ -91,7 +91,7 @@ contains
     integer ngpu_
     ngpu=ngpu_
 #ifdef MAGMA
-    call magmaf_init(ngpu)
+    call magmaf_init()
 #endif
   end subroutine
 
