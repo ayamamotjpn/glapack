@@ -1,0 +1,11 @@
+FC = gfortran
+INSD = gnu
+
+INC = -I/usr/local/include/$(INSD)
+LIB = -L/usr/local/lib -lmagma 
+
+jdiagMagmatst : jdiagMagmatst.f90
+	$(FC) $(INC) $(LIB) $< -o $@
+
+clean :
+	rm jdiagMagmatst
