@@ -1,4 +1,4 @@
-include make_gpu.inc
+include make.inc_gpu
 
 ARC = 86
 OBJD = obj_$(ARC)
@@ -30,35 +30,23 @@ INCC = $(CUDAINC) -I$(CUDADIR)/src -I./       #for using fortran.c fortran inter
 
 #all : lib/libglapack.so lib/libgblas.so
 
-ifeq ($(VER),GPU)
 all : lib/libglapack_gpu.so lib/libgblas_gpu.so
 
 lib/libglapack_gpu.so : $(OBJ) 
   #	$(F90) -pg $(JDIR) $(LIB) $^ -o $@ # for gpu version without cublas
 	$(F90) $(SHARED) $(LIB) $^ -o $@     # for gpu version with magma and cublas
 
-  lib/libgblas_gpu.so : $(OBJD)/fortran.o
+lib/libgblas_gpu.so : $(OBJD)/fortran.o
 	$(CC) $(SHARED) $(LIB) $< -o $@
 	#$(PRG) : $(OBJ)
 	#$(F90) -pg $(JDIR) $(LIB) $^ -o $@     # for gpu version
-else
-all : lib/libglapack_cpu.so          #libgblas_cpu.so
-
-lib/libglapack_cpu.so : $(OBJ)	
-	$(F90) $(SHARED) $(LIB) $^ -o $@   # for cpu version
-
-  lib/libgblas_cpu.so : $(OBJD)/fortran.o
-	$(CC) $(SHARED) $(LIB) $< -o $@
-endif
 
 #libgblas.so : $(OBJD)/fortran.o
 #	$(CC) $(SHARED) $(OBJD)/fortran.o $(LIB) -o libgblas.so
 
-#ifeq ($(VER),GPU)
 #libfblas.so :   $(OBJD)/fortran.o    # blas fortran wrapper library 
   #	$(F90) -pg $(OBJ) $(JDIR) $(LIB) -o $(PRG)     # for gpu version without cublas
 #	$(CC) $(SHARED) $(OBJD)/fortran.o -o libfblas.so     # for gpu version with magma and cublas
-#endif
 
 $(OBJD)/cublasXt.o : cublasXt.f90
 	$(F90) $(FCOPT) $(INC) $< -o $@
@@ -78,20 +66,11 @@ $(OBJD)/fortran.o : $(CUDAROOT)/src/fortran.c
 #endif
 
 install :
-ifeq ($(VER),GPU)
 	cp libglapack_gpu.so $(INSTLIBDIR)
 	cp $(JDIR)/glapack.mod $(INSTINCDIR)
-else
-	cp libglapack_cpu.so $(INSTLIBDIR)
-	cp $(JDIR)/glapack.mod $(INSTINCDIR)
-endif
 
 depend .depend :
-ifeq ($(VER),GPU)
 	makedepf90 -b $(OBJD) -DMAGMA $(FSRC)  > .depend
-else
-	makedepf90 -b $(OBJD) $(FSRC)  > .depend
-endif
 
 clean :
 	rm -f lib/libglapack_*.so lib/libgblas_*.so $(OBJD)/*.mod *.mod $(OBJ)

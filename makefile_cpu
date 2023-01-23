@@ -45,11 +45,8 @@ install :
 
 
 depend .depend :
-ifeq ($(VER),GPU)
-	makedepf90 -b $(OBJD) -DMAGMA $(FSRC)  > .depend
-else
 	makedepf90 -b $(OBJD) $(FSRC)  > .depend
-endif
+
 
 #clean :
 #	rm -f libglapack_*.so libgblas_*.so $(OBJD)/*.mod *.mod $(OBJ)

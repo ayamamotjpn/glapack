@@ -1,8 +1,8 @@
-#FC = gfortran -cpp -g
-#INSD = gnu
+FC = gfortran -cpp -g
+INSD = gnu
 
-FC = ifort -fpp -g -traceback
-INSD = intel
+#FC = ifort -fpp -g -traceback
+#INSD = intel
 
 MKLVER=2022.1.0
 CUDAVER=11.8
