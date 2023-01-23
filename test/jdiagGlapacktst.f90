@@ -1,20 +1,22 @@
-program jdiagMagmatst
+program jdiagGlapacktst
   use glapack
 #ifdef MAGMA
   use magma
 #endif
   implicit none
   real(8),allocatable :: a(:,:),w(:)
-  integer :: iarg,n,lda,i,j
-  character(10) :: arg1
+  integer :: iarg,ngpu,n,lda,i,j
+  character(10) :: arg1,arg2
 
   iarg=command_argument_count()
 
-  if(iarg/=1) then
+  if(iarg/=2) then
     call usage()
   end if
   call getarg(1,arg1)
+  call getarg(1,arg2)
   read(arg1,*) n
+  read(arg2,*) ngpu
   lda=n
 
   allocate(a(n,n),w(n))
@@ -31,7 +33,7 @@ program jdiagMagmatst
     write(6,'(20f10.4)') a(i,:)
   end do
 
-  call glapack_init()
+  call glapack_init(ngpu)
   call jdiagGlapack(lda,n,A,W)
 
   write(6,*) 'w'
@@ -44,6 +46,7 @@ contains
   subroutine usage()
     write(6,'(a)') 'Usage : jdiagMagmatst n'
     write(6,'(a)') ' n    : dimension of a symmetric matrix for diagonalization'
+    write(6,'(a)') ' ngpu : number of GPUs used'
     stop
   end subroutine
 
@@ -53,8 +56,9 @@ contains
     ! W: vector for eigenvalues
     ! n: matrix size   (4*NCC, 4*az atomok szama)
     ! lda: leading dimension
+#ifdef MAGMA
     use magma
-
+#endif
     implicit none
 
     integer :: info, lda, n
@@ -67,17 +71,22 @@ contains
     integer :: lrwork
     integer :: status
 
-    !allocate (work(10000), IWORK(10000) )    !, stat=status)
-    !call glapack_ev_prm('V', 'L', n, A, lda, lwork, lrwork, liwork) ! error occures here
-    call glapack_dsyev_prm('V', 'L', n, A, lda, lwork, lrwork, liwork)
-    lwork = int(work(1))
-    liwork = int(iwork(1))
-    allocate (work(lwork),iwork(liwork))
-    deallocate (work, iwork)
-
+    call glapack_ev_prm('V', 'L', n, A, lda, lwork, lrwork, liwork) ! error occures here
+#ifdef MAGMA
+    !call magmaf_dsyevd_m (ngpu, 'V', 'L', n, A, lda, W, WORK, lwork, IWORK, liwork, info)
+#else
+    !call dsyev('V', 'L', n, A, lda, lwork, lrwork, liwork)
+#endif
+    write(6,'(3i10)') 'lwork,lrwork,liwork=',lwork,lrwork,liwork ! for test
     ! allocate with the new, proper size:
     allocate (work(lwork), IWORK(liwork))        !, stat=status)
     call glapack_ev('V', 'L', n, A, lda, W, WORK, lwork, IWORK, liwork, info)
+#ifdef MAGMA
+    !call magmaf_dsyevd_m (ngpu, 'V', 'L', n, A, lda, W, WORK, lwork, IWORK, liwork, info)
+#else
+    !call dsyev('V', 'L', n, A, lda, lwork, lrwork, liwork)
+#endif
+
 #ifdef MAGMA 
     call magmaf_finalize()  !only for gpu version
 #endif 
