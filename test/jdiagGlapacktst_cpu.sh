@@ -1,16 +1,16 @@
 #for gfortran
-#INSD=gnu
+INSD=gnu
 #for ifort
-INSD=intel
+#INSD=intel
 
 MKLVER=2022.1.0
 CUDAVER=11.8
 #CUDAVER=12.0
-CUDALIB=/home/akiji/local/cuda-$CUDAVER/targets/x86_64-linux/lib
+CUDALIB=$HOME/local/cuda-$CUDAVER/targets/x86_64-linux/lib
 MKLLIB=/opt/intel/oneapi/mkl/$MKLVER/lib/intel64
 OMPLIB=/opt/intel/oneapi/compiler/$MKLVER/linux/compiler/lib/intel64_lin
 GLAPACK=../lib
-export LD_LIBRARY_PATH=$GLAPACK/usr/local/lib:/usr/local/lib/$INSD:$MKLLIB:$OMPLIB:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$GLAPACK:/usr/local/lib:/usr/local/lib/$INSD:$MKLLIB:$OMPLIB:$LD_LIBRARY_PATH
 
-jdiagGlapacktst_cpu 10
+jdiagGlapacktst_cpu 10 1
 
