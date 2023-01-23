@@ -11,38 +11,36 @@ FSRC = glapack.f90
 
 OBJ = $(OBJD)/glapack.o
 
-#all : libglapack.so libgblas.so
+#all : lib/libglapack.so lib/libgblas.so
+all : lib/libglapack_cpu.so
+#all : lib/libglapack_cpu.dylib
 
-all : libglapack_cpu.so          #libgblas_cpu.so
-#all : libglapack_cpu.dylib          #libgblas_cpu.so
+lib/libglapack_cpu.so : $(OBJ)	
+	$(F90) $(SHARED) $(LIB) $^ -o $@ # for cpu version
 
-libglapack_cpu.so : $(OBJ)	
-	$(F90) $(SHARED) $(OBJ) $(LIB) -o $@ # for cpu version
+#lib/libglapack_cpu.dylib : $(OBJ)	
+#	$(F90) $(SHARED) $(LIB) $^ -o $@ # for cpu version
 
-#libglapack_cpu.dylib : $(OBJ)	
-#	$(F90) $(SHARED) $(OBJ) $(LIB) -o $@ # for cpu version
+lib/libgblas_cpu.so : $(OBJD)/fortran.o
+	$(CC) $(SHARED) $(LIB) $< -o $@
 
-libgblas_cpu.so : $(OBJD)/fortran.o
-	$(CC) $(SHARED) $(OBJD)/fortran.o $(LIB) -o $@
-
-#libgblas_cpu.dylib : $(OBJD)/fortran.o
-#	$(CC) $(SHARED) $(OBJD)/fortran.o $(LIB) -o $@
+#lib/libgblas_cpu.dylib : $(OBJD)/fortran.o
+#	$(CC) $(SHARED) $(LIB) $< -o $@
 
 $(OBJD)/cublasXt.o : cublasXt.f90
-	$(F90) $(FCOPT) $(INC) cublasXt.f90 -o $@
+	$(F90) $(FCOPT) $(INC) $< -o $@
 	
 $(OBJD)/glapack.o : $(MKLBLAS) glapack.f90
-	$(F90) $(FCOPT) $(INC) glapack.f90 -o $@
+	$(F90) $(FCOPT) $(INC) $< -o $@
 
 $(OBJD)/mkl_blas.o : $(MKLBLAS)
-	$(F90) $(FCOPT) $(INC) $(MKLBLAS) -o $@
+	$(F90) $(FCOPT) $(INC) $< -o $@
 
 $(OBJD)/fortran.o : $(CUDAFRT)/fortran.c
-	$(CC) $(CCOPT) $(CUDAFRT)/fortran.c $(CRDAINC) -DCUBLAS_GFORTRAN -o $@
-
+	$(CC) $(CCOPT) $(CRDAINC) -DCUBLAS_GFORTRAN $< -o $@
 
 install :
-	cp libglapack_cpu.so $(INSTLIBDIR)
+	cp lib/libglapack_cpu.so $(INSTLIBDIR)
 	cp $(JDIR)/glapack.mod $(INSTINCDIR)
 
 
@@ -57,6 +55,6 @@ endif
 #	rm -f libglapack_*.so libgblas_*.so $(OBJD)/*.mod *.mod $(OBJ)
 
 clean :
-	rm -f libglapack_*.dylib libgblas_*.dylib $(OBJD)/*.mod *.mod $(OBJ)
+	rm -f lib/libglapack_cpu.so lib/libglapack_cpu.dylib $(OBJD)/*.mod *.mod $(OBJ)
 
 include .depend
