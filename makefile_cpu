@@ -11,26 +11,23 @@ FSRC = glapack.f90
 
 OBJ = $(OBJD)/glapack.o
 
-#all : lib/libglapack.so lib/libgblas.so
-all : lib/libglapack_cpu.so
+all : lib/libglapack_cpu.so #lib/libgblas_cpu.so
+#all : lib/libglapack_cpu.so
 #all : lib/libglapack_cpu.dylib
 
 lib/libglapack_cpu.so : $(OBJ)	
 	$(F90) $(SHARED) $(LIB) $^ -o $@ # for cpu version
 
-#lib/libglapack_cpu.dylib : $(OBJ)	
-#	$(F90) $(SHARED) $(LIB) $^ -o $@ # for cpu version
+lib/libglapack_cpu.dylib : $(OBJ)
+	$(F90) $(SHARED) $(LIB) $^ -o $@ # for cpu version
 
 lib/libgblas_cpu.so : $(OBJD)/fortran.o
 	$(CC) $(SHARED) $(LIB) $< -o $@
 
-#lib/libgblas_cpu.dylib : $(OBJD)/fortran.o
-#	$(CC) $(SHARED) $(LIB) $< -o $@
+lib/libgblas_cpu.dylib : $(OBJD)/fortran.o
+	$(CC) $(SHARED) $(LIB) $< -o $@
 
-$(OBJD)/cublasXt.o : cublasXt.f90
-	$(F90) $(FCOPT) $(INC) $< -o $@
-	
-$(OBJD)/glapack.o : $(MKLBLAS) glapack.f90
+$(OBJD)/glapack.o : glapack.f90 $(MKLBLAS) 
 	$(F90) $(FCOPT) $(INC) $< -o $@
 
 $(OBJD)/mkl_blas.o : $(MKLBLAS)
@@ -47,11 +44,7 @@ install :
 depend .depend :
 	makedepf90 -b $(OBJD) $(FSRC)  > .depend
 
-
-#clean :
-#	rm -f libglapack_*.so libgblas_*.so $(OBJD)/*.mod *.mod $(OBJ)
-
 clean :
-	rm -f lib/libglapack_cpu.so lib/libglapack_cpu.dylib $(OBJD)/*.mod *.mod $(OBJ)
+	rm -f lib/libglapack_cpu.so lib/libglapack_cpu.dylib $(JDIR)/glapack.mod $(OBJ)
 
 include .depend

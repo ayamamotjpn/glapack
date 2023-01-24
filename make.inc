@@ -15,14 +15,14 @@ PG = -pg
 PG =
 
 # chose fortran compiler
-#F90 = ifort
-F90 = gfortran
+F90 = ifort
+#F90 = gfortran
 #F90 = pgf90
 #F90 = nvfortran
 
 # chose c compiler
-CC = gcc
-#CC = icc
+#CC = gcc
+CC = icc
 #CC = pgcc
 #CC = nvcc
 
@@ -57,14 +57,12 @@ else ifeq ($(F90),gfortran)
    MJ = -J$(JDIR)
 else ifeq ($(F90),pgf90)
    INSD = pgi
-   #FPIC = -Xcompiler -fPIC
-   FPIC = -fPIC 
+   FPIC = -fPIC #FPIC = -Xcompiler -fPIC
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
 else ifeq ($(F90),nvfortran)
    INSD = nvidia
-   #FPIC = -Xcompiler -fPIC
-   FPIC = -fPIC      
+   FPIC = -fPIC #FPIC = -Xcompiler -fPIC  
    FPP = -Mpreprocess
    MJ = -module $(JDIR)
 endif
@@ -73,19 +71,24 @@ ifeq ($(CC),nvcc)
    CFLAGS = -Xcompiler -fPIC
    COPT = -O2
 else ifeq ($(CC),g++)
-   CFLAGS = $(FPIC) -fopenmp
+   CFLAGS = -fPIC -fopenmp
    COPT = -O2
-else ifeq ($(CC),icpc)
-   CFLAGS = $(FPIC) -qopenmp
+else ifeq ($(CC),icc)
+   CFLAGS = -fPIC -qopenmp
    COPT = -O2
 endif
 
 MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
-INSTLIBDIR=$(HOME)/lib/$(INSD)
-INSTINCDIR=$(HOME)/include/$(INSD)
+# for issp
+#INSTLIBDIR=$(HOME)/local/lib/$(INSD)
+#INSTINCDIR=$(HOME)/local/include/$(INSD)
+# for PC
+INSTLIBDIR=/usr/local/lib/$(INSD)
+INSTINCDIR=/usr/local/include/$(INSD)
+
 LIB =  $(FGSLLIB) $(GSLLIB) $(MKL) $(LAPACK)
-INC = $(FGSLINC)  $(MKLINC) -I$(JDIR) # for cpu version fgsl.mod
+INC = $(FGSLINC) $(MKLINC) -I$(JDIR) # for cpu version fgsl.mod
 
 # *****at the moment, openmp does not work*****
 
@@ -114,6 +117,6 @@ ifeq ($(F90),nvfortran)
    SHARED = -shared
 endif
 
-FCOPT = -c $(OPT) $(PG) $(FPP) $(FPIC) $(IDIR) $(MJ) -fPIC
-CCOPT = -c $(COPT) $(PG) $(CFLAGS)
+FCOPT = -c $(OPT) $(PG) $(FPP) $(FPIC) $(IDIR) $(MJ)
+CCOPT = -c $(COPT) $(PG) $(CFLAGS) 
 
