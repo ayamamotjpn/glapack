@@ -12,10 +12,11 @@ MKLLIB=/opt/intel/oneapi/mkl/$(MKLVER)/lib/intel64 -lmkl_sequential -lmkl_intel_
 #MKLLIB=/opt/intel/oneapi/mkl/$(MKLVER)/lib/intel64 -lmkl_intel_thread -lmkl_rt -lmkl_core -lmkl_intel_lp64
 
 MAGMALIB=/home/akiji/local/lib
-#GLAPACK=/usr/local/lib/$(INSD)
-GLAPACK=../lib
+GLAPACK=/usr/local/lib/$(INSD)
+#GLAPACK=../lib
 
-INC = -I../obj_86 -I/usr/local/include/$(INSD)
+#INC = -I../obj_86
+INC = -I/usr/local/include/$(INSD)
 
 LIB = -L$(GLAPACK) -L$(MAGMALIB) -L$(CUDALIB) -L$(MKLLIB) -lglapack_gpu -lmagma -lcudart 
 

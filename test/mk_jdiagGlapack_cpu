@@ -14,10 +14,11 @@ MKLLIB=$(MKLROOT) -lmkl_intel_thread -lmkl_rt -lmkl_core -lmkl_intel_lp64
 OMPLIB=$(OMPROOT) -liomp5
 
 MAGMALIB=/home/akiji/local/lib
-#GLAPACK=/usr/local/lib/$(INSD)
-GLAPACK=../lib
+GLAPACK=/usr/local/lib/$(INSD)
+#GLAPACK=../lib
 
-INC = -I../obj_86  #-I/usr/local/include/$(INSD)
+#INC = -I../obj_86
+INC = -I/usr/local/include/$(INSD)
 
 LIB = -L$(GLAPACK) -L$(MAGMALIB) -L$(CUDALIB) -L$(MKLLIB) -L$(OMPLIB) -lglapack_cpu -llapack
 
