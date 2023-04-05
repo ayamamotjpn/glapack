@@ -1,7 +1,7 @@
+VER = CPU
 include make.inc
 
-VER = CPU
-LAPACK = -L/usr/local/Cellar/openblas/0.3.13/lib -llapack
+#LAPACK = -L/usr/local/Cellar/openblas/0.3.13/lib -llapack
 
 LIB =  $(FGSLLIB) $(GSLLIB) $(MKL)
 INC = $(FGSLINC)  $(MKLINC) -I$(JDIR) # for cpu version fgsl.mod

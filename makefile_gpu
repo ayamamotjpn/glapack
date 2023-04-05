@@ -11,7 +11,7 @@ FSRC = glapack.f90
 
 # cuda-11.8 incliude fortran_thunking.c
 # Fortran wrapper fortran.c for using cuda
-#CSRC = $(CUDADIR)/src/fortran_thunking.c 
+#CSRC = $(CUDAROOT)/src/fortran_thunking.c 
 
 OBJ = $(OBJD)/glapack.o
 
@@ -21,7 +21,7 @@ ifeq ($(VER),GPU)
 endif
 
 MAGMABLAS = $(MAGMAROOT)/control/magmablas_   # for magmablasf interface
-INCC = $(CUDAINC) -I$(CUDADIR)/src -I./       #for using fortran.c fortran interface of cublas
+INCC = $(CUDAINC) -I$(CUDAROOT)/src -I./       #for using fortran.c fortran interface of cublas
 
 all : lib/libglapack_gpu.so lib/libgblas_gpu.so
 

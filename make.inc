@@ -7,22 +7,33 @@ OBJD = obj_86
 JDIR = obj_86
 IDIR = -I$(JDIR)
 
-MKLROOT = /home/app/oneapi/mkl/2022.1.0
-#NVROOT = /home/app/hpc_sdk/Linux_x86_64/22.2/compilers
+CUDA_VER = 12.0
+MKL_VER = 2023.0.0
+MAGMA_VER = 2.7.0
+
+CUDAROOT = $(HOME)/local/cuda-$(CUDA_VER)
+CUDAHOME = $(CUDAROOT)/targets/x86_64-linux
+CUDALIB = -L$(CUDAHOME)/lib -lcudart
+CUDAINC = -I$(CUDAHOME)/include
+
+MAGMAROOT = $(HOME)/local/magma-$(MAGMA_VER)
+MAGMAINC = -I$(MAGMAROOT)/include/$(INSD)
+MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
+MKLROOT = /home/app/oneapi/mkl/$(MKL_VER)
 
 # for profiler
 PG = -pg
 PG =
 
 # chose fortran compiler
-F90 = ifort
+#F90 = ifort
 #F90 = gfortran
 #F90 = pgf90
-#F90 = nvfortran
+F90 = nvfortran
 
 # chose c compiler
-#CC = gcc
-CC = icc
+CC = gcc
+#CC = icc
 #CC = pgcc
 #CC = nvcc
 
@@ -83,6 +94,7 @@ MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 # for issp
 #INSTLIBDIR=$(HOME)/local/lib/$(INSD)
 #INSTINCDIR=$(HOME)/local/include/$(INSD)
+
 # for PC
 INSTLIBDIR=/usr/local/lib/$(INSD)
 INSTINCDIR=/usr/local/include/$(INSD)
