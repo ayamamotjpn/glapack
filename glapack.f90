@@ -633,16 +633,13 @@ contains
     allocate(work(1),rwork(1),w(1))
     !allocate(iwork(1))
     lwork  = -1
-    !lrwork = -1
-    !liwork = -1
-    !lrwork=1
     ! calculate work array size used in ev
     call glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork,iwork,liwork,info )
     if(info/=0) then
       write(6,*) 'info in glapack_ssyev ',info; stop
     end if 
     print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
-    lwork = work(1)
+    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
     !lrwork=rwork(1)
     !liwork = iwork(1)
     lwork=max(1,lwork)
@@ -667,17 +664,14 @@ contains
     integer :: iwork(1)
     integer :: info
     allocate(work(1),rwork(1),w(1))
-
     lwork  = -1
-    !lrwork = -1
-    !liwork = -1
-    !lrwork=1
     ! calculate work array size used in ev
     call glapack_dsyev( jobz, uplo, n, A, lda, w, work, lwork,iwork,liwork,info )
     if(info/=0) then
       write(6,*) 'info in glapack dsyev ',info; stop
     end if
-    lwork = work(1)
+    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
+    !lwork = work(1)
     !lrwork=rwork(1)
     !liwork = iwork(1)
     lwork=max(1,lwork)
@@ -703,12 +697,10 @@ contains
     allocate(work(1),rwork(1),w(1))
     allocate(iwork(1))
     lwork  = -1
-    !lrwork = -1
-    !liwork = -1
-    !lrwork=1
     ! calculate work array size used in ev
     call glapack_cheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
-    lwork = work(1)
+    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
+    !lwork = work(1)
     !lrwork=rwork(1)
     !liwork = iwork(1)
     lwork=max(1,lwork)
@@ -734,12 +726,10 @@ contains
     allocate(work(1),rwork(1),w(1))
     allocate(iwork(1))
     lwork  = -1
-    !lrwork = -1
-    !liwork = -1
-    !lrwork=1
     ! calculate work array size used in ev
     call glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
-    lwork = work(1)
+    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
+    !lwork = work(1)
     !lrwork=rwork(1)
     !liwork = iwork(1)
     lwork=max(1,lwork)
