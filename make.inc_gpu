@@ -1,0 +1,21 @@
+VER = GPU
+include make.inc
+
+# for -DCUDAFOR (only for nvfortran or pgf90)
+ifeq ($(VER),GPU)
+   CUBLASINC = -I$(CUDAROOT)/targets/x86_64-linux/include
+endif
+
+MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+
+LIB =  $(MAGMALIB) $(CUDALIB) $(FGSLLIB) $(GSLLIB) $(MKL)   # for magma
+INC = $(FGSLINC) $(FEASTINC_GPU) $(MAGMAINC) $(CUBLASINC) $(CUDAINC) -I$(JDIR) # for gpu version fgsl.mod fortran.c and MAGMA
+
+FCOPT += -DMAGMA
+CCOPT += -DCUBLAS_USE_THUNKING
+
+#DEVPTR = -Dmagma_devptr_t="integer(kind=8)"
+#FCOPT = -c $(OPT) $(PG) $(FPP) $(FPIC) $(IDIR) $(MJ) $(DEVPTR) -fPIC
+#CCOPT = -c $(COPT) $(PG) $(CFLAGS) $(CUBLASINC) 
+
+
