@@ -625,7 +625,7 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    real,allocatable:: w(:)
+    real :: w(1)
     real :: work(1)   !real,allocatable:: work(:)
     real :: rwork(1)  !real,allocatable:: rwork(:)
     integer :: iwork(1)  !integer,allocatable :: iwork(:)
@@ -687,9 +687,9 @@ contains
     ! calculate work array size used in ev
     call glapack_cheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
     if(info/=0) then
-      write(6,*) 'info in glapack dsyev ',info; stop
+      write(6,*) 'info in glapack cheev ',info; stop
     end if
-    lwork = int(real(work(1))); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
+    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
@@ -713,9 +713,9 @@ contains
     ! calculate work array size used in ev
     call glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
     if(info/=0) then
-      write(6,*) 'info in glapack dsyev ',info; stop
+      write(6,*) 'info in glapack zheev ',info; stop
     end if
-    lwork = int(real(work(1))); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
+    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
@@ -852,9 +852,9 @@ contains
     character        :: jobz
     character        :: uplo
     integer          :: n
-    real             :: A(lda,n)
+    real             :: A(lda,n)  ! real symmetric matrix -> eigenvector
     integer          :: lda
-    real             :: w(*)
+    real             :: w(*)      ! eigenvalue
     real             :: work(*)
     integer          :: lwork
     integer          :: iwork(*)
@@ -878,9 +878,9 @@ contains
     character        :: jobz
     character        :: uplo
     integer          :: n
-    complex          :: A(lda,n)
+    complex          :: A(lda,n)  ! Hermite matrix -> eigenvector
     integer          :: lda
-    real             :: w(*)
+    real             :: w(*)      ! eigenvalue
     complex          :: work(*)
     integer          :: lwork
     real             :: rwork(*)
@@ -906,9 +906,9 @@ contains
     character        :: jobz  ! 'V' or 'N'
     character        :: uplo  ! 'L' or 'U'
     integer          :: n
-    real(8)          :: A(lda,n)
+    real(8)          :: A(lda,n)  ! real symmetric matrix -> eigenvector
     integer          :: lda
-    real(8)          :: w(*)
+    real(8)          :: w(*)      ! eigenvalue
     real (8)         :: work(*)
     integer          :: lwork
     integer          :: iwork(*)
@@ -933,9 +933,9 @@ contains
     character        :: jobz  ! 'V' or 'N'
     character        :: uplo  ! 'L' or 'U'
     integer          :: n
-    complex(8)       :: A(lda,n)
+    complex(8)       :: A(lda,n)  ! Hermite matrix -> eigenvector
     integer          :: lda
-    real(8)          :: w(*)
+    real(8)          :: w(*)      ! eigenvalue
     complex(8)       :: work(*)
     integer          :: lwork
     real(8)          :: rwork(*)
