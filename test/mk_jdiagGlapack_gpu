@@ -1,24 +1,24 @@
-FC = gfortran -cpp -g
-INSD = gnu
+#FC = gfortran -cpp -g
+#INSD = gnu
 
-#FC = ifort -fpp -g -traceback
-#INSD = intel
+FC = ifort -fpp -g -traceback
+INSD = intel
 
 MKLVER=2022.1.0
-CUDAVER=11.8
+CUDAVER=12.0
 
 CUDALIB=/home/akiji/local/cuda-$(CUDAVER)/targets/x86_64-linux/lib
 MKLLIB=/opt/intel/oneapi/mkl/$(MKLVER)/lib/intel64 -lmkl_sequential -lmkl_intel_thread -lmkl_rt -lmkl_core -lmkl_intel_lp64
 #MKLLIB=/opt/intel/oneapi/mkl/$(MKLVER)/lib/intel64 -lmkl_intel_thread -lmkl_rt -lmkl_core -lmkl_intel_lp64
 
-MAGMALIB=/home/akiji/local/lib
+MAGMALIB=/home/akiji/local/magma-2.7.0_intel/lib
 GLAPACK=/usr/local/lib/$(INSD)
 #GLAPACK=../lib
 
 #INC = -I../obj_86
 INC = -I/usr/local/include/$(INSD)
 
-LIB = -L$(GLAPACK) -L$(MAGMALIB) -L$(CUDALIB) -L$(MKLLIB) -lglapack_gpu -lmagma -lcudart 
+LIB = -L$(GLAPACK) -L$(MAGMALIB) -L$(CUDALIB) -L$(MKLLIB) -lglapack_gpu -lmagma -lcudart  -lcusparse
 
 PRG = jdiagGlapacktst_gpu
 $(PRG) : jdiagGlapacktst.f90
