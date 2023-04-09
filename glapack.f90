@@ -607,7 +607,7 @@ contains
     real             :: work(*)
     integer          :: lwork
     real             :: rwork(*)    ! dummy
-    integer          :: lrwork     ! dummy
+    integer          :: lrwork      ! dummy
     integer          :: iwork(*)
     integer          :: liwork
     integer          :: info
@@ -625,27 +625,22 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    real,allocatable:: work(:)
-    real,allocatable:: rwork(:)
     real,allocatable:: w(:)
-    integer,allocatable :: iwork(:)
+    real :: work(1)   !real,allocatable:: work(:)
+    real :: rwork(1)  !real,allocatable:: rwork(:)
+    integer :: iwork(1)  !integer,allocatable :: iwork(:)
     integer :: info
-    allocate(work(1),rwork(1),w(1))
-    !allocate(iwork(1))
     lwork  = -1
     ! calculate work array size used in ev
     call glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork,iwork,liwork,info )
     if(info/=0) then
       write(6,*) 'info in glapack_ssyev ',info; stop
     end if 
-    print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
-    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
-    !lrwork=rwork(1)
-    !liwork = iwork(1)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
+    lwork = int(work(1)); liwork=iwork(1)  ! added
     lwork=max(1,lwork)
-    lrwork=max(1,lrwork)
+    lrwork=1
     liwork=max(1,liwork)
-    deallocate(work,rwork,w)
   end subroutine
 
   subroutine glapack_dsyev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
@@ -657,27 +652,21 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    real(8),allocatable:: work(:)
-    real(8),allocatable:: rwork(:)
-    real(8),allocatable:: w(:)
-    !integer,allocatable :: iwork(:)
-    integer :: iwork(1)
+    real(8):: work(1)   !    real(8),allocatable:: work(1)
+    real(8):: rwork(1)  !    real(8),allocatable:: rwork(1)
+    real(8):: w(1)      !    real(8),allocatable:: w(:)
+    integer ::iwork(1)  !    integer,allocatable :: iwork(:)
     integer :: info
-    allocate(work(1),rwork(1),w(1))
     lwork  = -1
     ! calculate work array size used in ev
     call glapack_dsyev( jobz, uplo, n, A, lda, w, work, lwork,iwork,liwork,info )
     if(info/=0) then
       write(6,*) 'info in glapack dsyev ',info; stop
     end if
-    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
-    !lwork = work(1)
-    !lrwork=rwork(1)
-    !liwork = iwork(1)
+    lwork = int(work(1)); liwork=iwork(1)  ! added
     lwork=max(1,lwork)
-    lrwork=max(1,lrwork)
+    lrwork=1
     liwork=max(1,liwork)
-    deallocate(work,rwork,w)
   end subroutine
 
   subroutine glapack_cheev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
@@ -689,24 +678,21 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    complex,allocatable:: work(:)
-    real,allocatable:: rwork(:)
-    real,allocatable:: w(:)
-    integer,allocatable :: iwork(:)
+    complex:: work(1)  !complex,allocatable:: work(:)
+    real:: rwork(1)    !real,allocatable:: rwork(:)
+    real:: w(1)        !real,allocatable:: w(:)
+    integer:: iwork(1) !integer,allocatable :: iwork(:)
     integer :: info
-    allocate(work(1),rwork(1),w(1))
-    allocate(iwork(1))
     lwork  = -1
     ! calculate work array size used in ev
     call glapack_cheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
-    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
-    !lwork = work(1)
-    !lrwork=rwork(1)
-    !liwork = iwork(1)
+    if(info/=0) then
+      write(6,*) 'info in glapack dsyev ',info; stop
+    end if
+    lwork = int(real(work(1))); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
-    deallocate(work,rwork,w,iwork)
   end subroutine
 
   subroutine glapack_zheev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
@@ -718,24 +704,21 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    complex(8),allocatable:: work(:)
-    real(8),allocatable:: rwork(:)
-    real(8),allocatable:: w(:)
-    integer,allocatable :: iwork(:)
+    complex(8):: work(1)  !complex(8),allocatable:: work(:)
+    real(8):: rwork(1)    !real(8),allocatable:: rwork(:)
+    real(8):: w(1)        !real(8),allocatable:: w(:)
+    integer:: iwork(1)    !integer,allocatable :: iwork(:)
     integer :: info
-    allocate(work(1),rwork(1),w(1))
-    allocate(iwork(1))
     lwork  = -1
     ! calculate work array size used in ev
     call glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
-    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
-    !lwork = work(1)
-    !lrwork=rwork(1)
-    !liwork = iwork(1)
+    if(info/=0) then
+      write(6,*) 'info in glapack dsyev ',info; stop
+    end if
+    lwork = int(real(work(1))); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
-    deallocate(work,rwork,w,iwork)
   end subroutine
 
   !  ! this estimate waork array size lwork, liwork
@@ -887,7 +870,7 @@ contains
       call magmaf_ssyevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
     end if
 #else
-    call ssyev( jobz, uplo, n, A, lda, w, work, lwork, info )
+    call ssyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
 #endif
   end subroutine
 
@@ -915,13 +898,13 @@ contains
       call magmaf_cheevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     end if
 #else
-    call cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
+    call cheevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
 #endif
   end subroutine
 
   subroutine glapack_dsyev( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
-    character        :: jobz
-    character        :: uplo
+    character        :: jobz  ! 'V' or 'N'
+    character        :: uplo  ! 'L' or 'U'
     integer          :: n
     real(8)          :: A(lda,n)
     integer          :: lda
@@ -941,13 +924,14 @@ contains
       call magmaf_dsyevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
     end if
 #else
-    call dsyev( jobz, uplo, n, A, lda, w, work, lwork, info )
+    call dsyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    liwork=1
 #endif
   end subroutine
 
   subroutine glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
-    character        :: jobz
-    character        :: uplo
+    character        :: jobz  ! 'V' or 'N'
+    character        :: uplo  ! 'L' or 'U'
     integer          :: n
     complex(8)       :: A(lda,n)
     integer          :: lda
@@ -969,7 +953,7 @@ contains
       call magmaf_zheevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     end if
 #else
-    call zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
+    call zheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
 #endif
   end subroutine
 
