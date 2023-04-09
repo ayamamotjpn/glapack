@@ -1,11 +1,12 @@
 #for gfortran
-INSD=gnu
+#INSD=gnu
 #for ifort
-#INSD=intel
+INSD=intel
 
 MKLVER=2022.1.0
-CUDAVER=11.8
-#CUDAVER=12.0
+#CUDAVER=11.8
+#MKLVER=2023.0.0
+CUDAVER=12.0
 CUDALIB=$HOME/local/cuda-$CUDAVER/targets/x86_64-linux/lib
 MKLLIB=/opt/intel/oneapi/mkl/$MKLVER/lib/intel64
 #GLAPACK=../lib
