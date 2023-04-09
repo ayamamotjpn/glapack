@@ -26,10 +26,10 @@ PG = -pg
 PG =
 
 # chose fortran compiler
-#F90 = ifort
+F90 = ifort
 #F90 = gfortran
 #F90 = pgf90
-F90 = nvfortran
+#F90 = nvfortran
 
 # chose c compiler
 CC = gcc
