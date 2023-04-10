@@ -636,11 +636,11 @@ contains
     if(info/=0) then
       write(6,*) 'info in glapack_ssyev ',info; stop
     end if 
-    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
     lwork = int(work(1)); liwork=iwork(1)  ! added
     lwork=max(1,lwork)
     lrwork=1
     liwork=max(1,liwork)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
   end subroutine
 
   subroutine glapack_dsyev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
@@ -667,6 +667,7 @@ contains
     lwork=max(1,lwork)
     lrwork=1
     liwork=max(1,liwork)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
   end subroutine
 
   subroutine glapack_cheev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
@@ -693,6 +694,7 @@ contains
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
   end subroutine
 
   subroutine glapack_zheev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
@@ -719,6 +721,7 @@ contains
     lwork=max(1,lwork)
     lrwork=max(1,lrwork)
     liwork=max(1,liwork)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
   end subroutine
 
   !  ! this estimate waork array size lwork, liwork
