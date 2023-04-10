@@ -63,6 +63,7 @@ program jdiagGlapacktst
 
   print *,'before jdiagGlapack(w)'
   ! w should be equal to wd for DP=8
+  ! w should be equal to ws for -DSINGLE is specified in makefile
   call jdiagGlapack(lda,n,a,w)
   write(6,*) 'w'
   write(6,'(a,20f10.4)') 'jdiagGlapack(w)', w(:)

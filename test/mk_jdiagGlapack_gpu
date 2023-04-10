@@ -1,7 +1,7 @@
-#FC = gfortran -cpp -g
+#FC = gfortran -cpp -g -DSINGLE
 #INSD = gnu
 
-FC = ifort -fpp -g -traceback
+FC = ifort -fpp -g -traceback -DSINGLE
 INSD = intel
 
 MKLVER=2022.1.0
