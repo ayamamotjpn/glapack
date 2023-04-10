@@ -1,18 +1,16 @@
 #FC = gfortran -cpp -g
-FC = ifort -fpp -g
-INSD = gnu
+#INSD = gnu
 
-#FC = ifort -fpp -g -traceback
-#INSD = intel
+FC = ifort -fpp -g -traceback
+INSD = intel
 
-MKLVER=2023.0.0
-CUDAVER=11.8
+MKLVER=2022.1.0
+CUDAVER=12.0
 MKLROOT=/opt/intel/oneapi/mkl/$(MKLVER)/lib/intel64
 OMPROOT=/opt/intel/oneapi/compiler/$(MKLVER)/linux/compiler/lib/intel64_lin
 
 CUDALIB=/home/akiji/local/cuda-$(CUDAVER)/targets/x86_64-linux/lib
-#MKLLIB=$(MKLROOT) -lmkl_sequential -lmkl_intel_thread -lmkl_rt -lmkl_core -lmkl_intel_lp64
-MKLLIB=$(MKLROOT) -lmkl_intel_thread -lmkl_rt -lmkl_core -lmkl_intel_lp64
+MKLLIB=$(MKLROOT) -lmkl_sequential -lmkl_intel_thread -lmkl_rt -lmkl_core -lmkl_intel_lp64
 OMPLIB=$(OMPROOT) -liomp5
 
 MAGMALIB=/home/akiji/local/magma-2.7.0_intel/lib
@@ -22,11 +20,11 @@ GLAPACK=/usr/local/lib/$(INSD)
 #INC = -I../obj_86
 INC = -I/usr/local/include/$(INSD)
 
-LIB = -L$(GLAPACK) -L$(MAGMALIB) -L$(CUDALIB) -L$(MKLLIB) -L$(OMPLIB) -lglapack_cpu -llapack 
+LIB = -L$(GLAPACK) -L$(MAGMALIB) -L$(CUDALIB) -L$(MKLLIB) -L$(OMPLIB) -lglapack_cpu -llapack -lcusparse
 
 PRG = jdiagGlapacktst_cpu
-$(PRG) : jdiagGlapacktst.f90
-	$(FC) $(INC) $(LIB) $< -o $@
+$(PRG) : kinds.f90 jdiagGlapacktst.f90
+	$(FC) $(INC) $(LIB) $^ -o $@
 
 clean :
 	rm -f $(PRG)

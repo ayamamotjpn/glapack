@@ -9,7 +9,6 @@ CUDAVER=12.0
 
 CUDALIB=/home/akiji/local/cuda-$(CUDAVER)/targets/x86_64-linux/lib
 MKLLIB=/opt/intel/oneapi/mkl/$(MKLVER)/lib/intel64 -lmkl_sequential -lmkl_intel_thread -lmkl_rt -lmkl_core -lmkl_intel_lp64
-#MKLLIB=/opt/intel/oneapi/mkl/$(MKLVER)/lib/intel64 -lmkl_intel_thread -lmkl_rt -lmkl_core -lmkl_intel_lp64
 
 MAGMALIB=/home/akiji/local/magma-2.7.0_intel/lib
 GLAPACK=/usr/local/lib/$(INSD)
@@ -21,8 +20,8 @@ INC = -I/usr/local/include/$(INSD)
 LIB = -L$(GLAPACK) -L$(MAGMALIB) -L$(CUDALIB) -L$(MKLLIB) -lglapack_gpu -lmagma -lcudart  -lcusparse
 
 PRG = jdiagGlapacktst_gpu
-$(PRG) : jdiagGlapacktst.f90
-	$(FC) $(INC) $(LIB) -DMAGMA $< -o $@
+$(PRG) : kinds.f90 jdiagGlapacktst.f90
+	$(FC) $(INC) $(LIB) -DMAGMA $^ -o $@
 
 clean :
 	rm -f $(PRG)
