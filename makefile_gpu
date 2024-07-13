@@ -36,7 +36,7 @@ lib/libgblas_gpu.so : $(OBJD)/fortran.o
 $(OBJD)/cublasXt.o : cublasXt.f90
 	$(F90) $(FCOPT) $(INC) $< -o $@
 	
-$(OBJD)/glapack.o : glapack.f90 $(MKLBLAS)
+$(OBJD)/glapack.o : glapack.f90 
 	$(F90) $(FCOPT) $(INC) $< -o $@
 
 $(OBJD)/mkl_blas.o : $(MKLBLAS)

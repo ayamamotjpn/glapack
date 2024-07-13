@@ -45,8 +45,18 @@ module glapack
     !module procedure glapack_gpotri
   end interface
 
+  interface glapack_tri2x
+    module procedure glapack_ssytri2x,glapack_dsytri2x,glapack_chetri2x,glapack_zhetri2x
+    !module procedure glapack_gpotri
+  end interface
+
   interface glapack_potrf
     module procedure glapack_spotrf,glapack_dpotrf,glapack_cpotrf,glapack_zpotrf
+    !module procedure glapack_gpotrf
+  end interface
+
+  interface glapack_trf
+    module procedure glapack_ssytrf,glapack_dsytrf,glapack_chetrf,glapack_zhetrf
     !module procedure glapack_gpotrf
   end interface
 
@@ -499,6 +509,72 @@ contains
 #endif
   end subroutine
 
+  subroutine glapack_ssytrf( uplo, n, A, lda, ipiv, work, lwork, info )
+    character        :: uplo
+    integer          :: n
+    real(4)          :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    real(4)          :: work(lwork)
+    integer          :: lwork
+    integer          :: info
+#ifdef MAGMA
+    call magmaf_ssytrf( uplo, n, A, lda, ipiv, info )
+#else
+    call ssytrf( uplo, n, A, lda, ipiv, work, lwork, info )
+#endif
+  end subroutine
+
+  subroutine glapack_dsytrf( uplo, n, A, lda, ipiv, work, lwork, info )
+    character        :: uplo
+    integer          :: n
+    real(8)          :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    real(8)          :: work(lwork)
+    integer          :: lwork
+    integer          :: info
+#ifdef MAGMA
+    call magmaf_dsytrf( uplo, n, A, lda, ipiv, info )
+#else
+    call dsytrf( uplo, n, A, lda, ipiv, work, lwork, info )
+#endif
+  end subroutine
+
+
+  subroutine glapack_chetrf( uplo, n, A, lda, ipiv, work, lwork, info )
+    character        :: uplo
+    integer          :: n
+    complex(4)       :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    complex(4)       :: work(lwork)
+    integer          :: lwork
+    integer          :: info
+#ifdef MAGMA
+    call magmaf_chetrf( uplo, n, A, lda, ipiv, info )
+#else
+    call chetrf( uplo, n, A, lda, ipiv, work, lwork, info )
+#endif
+  end subroutine
+
+  subroutine glapack_zhetrf( uplo, n, A, lda, ipiv, work,lwork,info )
+    character        :: uplo
+    integer          :: n
+    complex(8)       :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    complex(8)       :: work(lwork)
+    integer          :: lwork
+    integer          :: info
+#ifdef MAGMA
+    call magmaf_zhetrf( uplo, n, A, lda, ipiv, info )
+#else
+    call zhetrf( uplo, n, A, lda, ipiv, work, lwork, info )
+#endif
+  end subroutine
+
+
   !  subroutine glapack_gpotrf( uplo, n, A, lda, info )
   !    character        :: uplo
   !    integer          :: n
@@ -597,6 +673,71 @@ contains
 #endif
   end subroutine
 
+  subroutine glapack_ssytri2x(uplo,n,A,lda,ipiv,work,lwork,info)
+    character        :: uplo
+    integer          :: n
+    real(4)          :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    real(4)          :: work(lwork)
+    integer          :: lwork
+    integer          :: info
+#ifdef MAGMA
+    call magmaf_ssytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+#else
+    call ssytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+#endif
+  end subroutine
+
+  subroutine glapack_dsytri2x(uplo,n,A,lda,ipiv,work,lwork,info)
+    character        :: uplo
+    integer          :: n
+    real(8)          :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    real(8)          :: work(lwork)
+    integer          :: lwork
+    integer          :: info
+#ifdef MAGMA
+    call magmaf_dsytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+#else
+    call dsytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+#endif
+  end subroutine
+
+  subroutine glapack_chetri2x(uplo,n,A,lda,ipiv,work,lwork,info)
+    character        :: uplo
+    integer          :: n
+    complex(4)       :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    complex(4)       :: work(lwork)
+    integer          :: lwork
+    integer          :: info
+#ifdef MAGMA
+    call magmaf_chetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+#else
+    call chetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+#endif
+  end subroutine
+
+  subroutine glapack_zhetri2x(uplo,n,A,lda,ipiv,work,lwork,info)
+    character        :: uplo
+    integer          :: n
+    complex(8)       :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    complex(8)       :: work(lwork)
+    integer          :: lwork
+    integer          :: info
+#ifdef MAGMA
+    call magmaf_zhetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+#else
+    call zhetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+#endif
+  end subroutine
+
+
   subroutine glapack_ssyev0( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     character        :: jobz
     character        :: uplo
@@ -625,12 +766,13 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    real :: w(1)
     real :: work(1)   !real,allocatable:: work(:)
     real :: rwork(1)  !real,allocatable:: rwork(:)
     integer :: iwork(1)  !integer,allocatable :: iwork(:)
+    real,allocatable :: w(:)
     integer :: info
-    lwork  = -1
+    allocate(w(n))
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
     ! calculate work array size used in ev
     call glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork,iwork,liwork,info )
     if(info/=0) then
@@ -654,10 +796,11 @@ contains
     integer :: liwork
     real(8):: work(1)   !    real(8),allocatable:: work(1)
     real(8):: rwork(1)  !    real(8),allocatable:: rwork(1)
-    real(8):: w(1)      !    real(8),allocatable:: w(:)
+    real(8),allocatable :: w(:)      !    real(8),allocatable:: w(:)
     integer ::iwork(1)  !    integer,allocatable :: iwork(:)
     integer :: info
-    lwork  = -1
+    allocate(w(n))
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
     ! calculate work array size used in ev
     call glapack_dsyev( jobz, uplo, n, A, lda, w, work, lwork,iwork,liwork,info )
     if(info/=0) then
@@ -681,10 +824,11 @@ contains
     integer :: liwork
     complex:: work(1)  !complex,allocatable:: work(:)
     real:: rwork(1)    !real,allocatable:: rwork(:)
-    real:: w(1)        !real,allocatable:: w(:)
+    real,allocatable :: w(:) !real,allocatable:: w(:)
     integer:: iwork(1) !integer,allocatable :: iwork(:)
     integer :: info
-    lwork  = -1
+    allocate(w(n))
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
     ! calculate work array size used in ev
     call glapack_cheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
     if(info/=0) then
@@ -706,12 +850,13 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    complex(8):: work(1)  !complex(8),allocatable:: work(:)
+    complex(8) :: work(1)  !complex(8),allocatable:: work(:)
     real(8):: rwork(1)    !real(8),allocatable:: rwork(:)
-    real(8):: w(1)        !real(8),allocatable:: w(:)
+    real(8),allocatable :: w(:)  !real(8),allocatable:: w(:)
     integer:: iwork(1)    !integer,allocatable :: iwork(:)
     integer :: info
-    lwork  = -1
+    allocate(w(n))
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
     ! calculate work array size used in ev
     call glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
     if(info/=0) then
@@ -901,7 +1046,7 @@ contains
       call magmaf_cheevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     end if
 #else
-    call cheevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    call cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
 #endif
   end subroutine
 

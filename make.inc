@@ -8,8 +8,9 @@ JDIR = obj_86
 IDIR = -I$(JDIR)
 
 CUDA_VER = 12.0
-MKL_VER = 2023.0.0
+MKL_VER = 2023.1.0
 MAGMA_VER = 2.7.0
+NV_VER = 23.1
 
 CUDAROOT = $(HOME)/local/cuda-$(CUDA_VER)
 CUDAHOME = $(CUDAROOT)/targets/x86_64-linux
@@ -19,10 +20,11 @@ CUDAINC = -I$(CUDAHOME)/include
 MAGMAROOT = $(HOME)/local/magma-$(MAGMA_VER)
 MAGMAINC = -I$(MAGMAROOT)/include/$(INSD)
 MAGMALIB = -L$(MAGMAROOT)/lib -lmagma
-MKLROOT = /home/app/oneapi/mkl/$(MKL_VER)
+MKLROOT = $(HOME)/app/oneapi/mkl/$(MKL_VER)
+#NVLIB = -L/opt/nvidia/hpc_sdk/Linux_x86_64/$(NV_VER)/compilers/lib -lgomp
 
 # for profiler
-PG = -pg
+#PG = -pg
 PG =
 
 # chose fortran compiler
@@ -32,8 +34,8 @@ F90 = ifort
 #F90 = nvfortran
 
 # chose c compiler
-CC = gcc
-#CC = icc
+#CC = gcc
+CC = icc
 #CC = pgcc
 #CC = nvcc
 
@@ -86,7 +88,7 @@ else ifeq ($(CC),g++)
    COPT = -O2
 else ifeq ($(CC),icc)
    CFLAGS = -fPIC -qopenmp
-   COPT = -O2
+   COPT = -O2 -diag-disable=10448
 endif
 
 MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
@@ -99,16 +101,15 @@ MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 INSTLIBDIR=/usr/local/lib/$(INSD)
 INSTINCDIR=/usr/local/include/$(INSD)
 
-LIB =  $(FGSLLIB) $(GSLLIB) $(MKL) $(LAPACK)
+LIB =  $(FGSLLIB) $(GSLLIB) $(MKL) $(LAPACK) #$(NVLIB)
 INC = $(FGSLINC) $(MKLINC) -I$(JDIR) # for cpu version fgsl.mod
 
 # *****at the moment, openmp does not work*****
 
 # optimization flag
 ifeq ($(F90),ifort)
-    #OPT = -g -check all -traceback
-    OPT = -O3 -qopenmp
-    #OPT = -O3
+    #OPT = -g -qopenmp -check all -traceback -diag-disable=10448
+    OPT = -O3 -qopenmp -diag-disable=10448
     SHARED = -shared
 endif
 
