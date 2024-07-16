@@ -45,6 +45,13 @@ module glapack
     !module procedure glapack_gpotri
   end interface
 
+!  magma does not support tri  only cpu version
+  interface glapack_tri
+    module procedure glapack_ssytri,glapack_dsytri,glapack_chetri,glapack_zhetri
+    !module procedure glapack_gpotri
+  end interface
+
+!  magma does not support tri2x  only cpu version
   interface glapack_tri2x
     module procedure glapack_ssytri2x,glapack_dsytri2x,glapack_chetri2x,glapack_zhetri2x
     !module procedure glapack_gpotri
@@ -673,6 +680,73 @@ contains
 #endif
   end subroutine
 
+ !magma does not support ssytri etc. only cup version
+  subroutine glapack_ssytri(uplo,n,A,lda,ipiv,work,info)
+    character        :: uplo
+    integer          :: n
+    real(4)          :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    real(4)          :: work(n)
+    !integer          :: lwork
+    integer          :: info
+!#ifdef MAGMA
+!    call magmaf_ssytri( uplo, n, A, lda, ipiv, work, lwork, info )
+!#else
+    call ssytri( uplo, n, A, lda, ipiv, work,info )
+!#endif
+  end subroutine
+
+  subroutine glapack_dsytri(uplo,n,A,lda,ipiv,work,info)
+    character        :: uplo
+    integer          :: n
+    real(8)          :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    real(8)          :: work(n)
+    integer          :: lwork
+    integer          :: info
+!#ifdef MAGMA
+!    call magmaf_dsytri( uplo, n, A, lda, ipiv, work, lwork, info )
+!#else
+    call dsytri( uplo, n, A, lda, ipiv, work, info )
+!#endif
+  end subroutine
+
+  subroutine glapack_chetri(uplo,n,A,lda,ipiv,work,info)
+    character        :: uplo
+    integer          :: n
+    complex(4)       :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    complex(4)       :: work(n)
+    integer          :: lwork
+    integer          :: info
+!#ifdef MAGMA
+!    call magmaf_chetri( uplo, n, A, lda, ipiv, work, lwork, info )
+!#else
+    call chetri( uplo, n, A, lda, ipiv, work,info )
+!#endif
+  end subroutine
+
+  subroutine glapack_zhetri(uplo,n,A,lda,ipiv,work,info)
+    character        :: uplo
+    integer          :: n
+    complex(8)       :: A(lda,n)
+    integer          :: lda
+    integer          :: ipiv(n)
+    complex(8)       :: work(n)
+    integer          :: lwork
+    integer          :: info
+!#ifdef MAGMA
+!    call magmaf_zhetri( uplo, n, A, lda, ipiv, work, lwork, info )
+!#else
+    call zhetri2x( uplo, n, A, lda, ipiv, work, info )
+!#endif
+  end subroutine
+
+
+ !magma does not support ssytri2x etc. only cup version
   subroutine glapack_ssytri2x(uplo,n,A,lda,ipiv,work,lwork,info)
     character        :: uplo
     integer          :: n
@@ -682,11 +756,11 @@ contains
     real(4)          :: work(lwork)
     integer          :: lwork
     integer          :: info
-#ifdef MAGMA
-    call magmaf_ssytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-#else
+!#ifdef MAGMA
+!    call magmaf_ssytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+!#else
     call ssytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-#endif
+!#endif
   end subroutine
 
   subroutine glapack_dsytri2x(uplo,n,A,lda,ipiv,work,lwork,info)
@@ -698,11 +772,11 @@ contains
     real(8)          :: work(lwork)
     integer          :: lwork
     integer          :: info
-#ifdef MAGMA
-    call magmaf_dsytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-#else
+!#ifdef MAGMA
+!    call magmaf_dsytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+!#else
     call dsytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-#endif
+!#endif
   end subroutine
 
   subroutine glapack_chetri2x(uplo,n,A,lda,ipiv,work,lwork,info)
@@ -714,11 +788,11 @@ contains
     complex(4)       :: work(lwork)
     integer          :: lwork
     integer          :: info
-#ifdef MAGMA
-    call magmaf_chetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-#else
+!#ifdef MAGMA
+!    call magmaf_chetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+!#else
     call chetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-#endif
+!#endif
   end subroutine
 
   subroutine glapack_zhetri2x(uplo,n,A,lda,ipiv,work,lwork,info)
@@ -730,13 +804,12 @@ contains
     complex(8)       :: work(lwork)
     integer          :: lwork
     integer          :: info
-#ifdef MAGMA
-    call magmaf_zhetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-#else
+!#ifdef MAGMA
+!    call magmaf_zhetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+!#else
     call zhetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-#endif
+!#endif
   end subroutine
-
 
   subroutine glapack_ssyev0( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     character        :: jobz
