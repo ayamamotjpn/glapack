@@ -20,6 +20,7 @@
 module glapack
 #ifdef MAGMA
   use magma
+  !use magma2
   use cublasXt
 #endif
   implicit none
@@ -32,7 +33,7 @@ module glapack
 
   interface glapack_ev_prm
     !module procedure glapack_gev_prm
-    module procedure glapack_ssyev_prm,glapack_dsyev_prm,glapack_cheev_prm,glapack_zheev_prm
+    module procedure glapack_ssyev_prm,glapack_dsyev_prm,glapack_cheevd_prm,glapack_zheevd_prm
   end interface
 
   interface glapack_gemm
@@ -45,13 +46,13 @@ module glapack
     !module procedure glapack_gpotri
   end interface
 
-!  magma does not support tri  only cpu version
+  !  magma does not support tri  only cpu version
   interface glapack_tri
     module procedure glapack_ssytri,glapack_dsytri,glapack_chetri,glapack_zhetri
     !module procedure glapack_gpotri
   end interface
 
-!  magma does not support tri2x  only cpu version
+  !  magma does not support tri2x  only cpu version
   interface glapack_tri2x
     module procedure glapack_ssytri2x,glapack_dsytri2x,glapack_chetri2x,glapack_zhetri2x
     !module procedure glapack_gpotri
@@ -68,8 +69,16 @@ module glapack
   end interface
 
   interface glapack_ev
-    module procedure glapack_ssyev,glapack_dsyev,glapack_cheev,glapack_zheev,glapack_ssyev0
+    module procedure glapack_ssyev,glapack_dsyev,glapack_cheevd,glapack_zheevd,glapack_ssyev0
     !module procedure  glapack_gev
+  end interface
+
+  interface glapack_evdx
+    module procedure glapack_cheevdx,glapack_zheevdx,glapack_cheevdx_m,glapack_zheevdx_m
+  end interface
+
+  interface glapack_evdx_2stage
+    module procedure glapack_cheevdx_2stage,glapack_zheevdx_2stage,glapack_cheevdx_2stage_m,glapack_zheevdx_2stage_m
   end interface
 
   interface glapack_gst
@@ -90,6 +99,27 @@ module glapack
   interface glapack_trsm
     module procedure glapack_strsm,glapack_dtrsm,glapack_ctrsm,glapack_ztrsm
     !module procedure glapack_gtrsm
+  end interface
+
+  interface
+
+    integer function magma_vec_const(chr) &
+      &  bind(C,name="magma_vec_const")
+      use iso_c_binding
+      character(c_char),value :: chr
+    end function
+
+    integer function magma_range_const(chr) &
+      & bind(C,name="magma_range_const")
+      use iso_c_binding
+      character(c_char),value :: chr
+    end function
+
+    integer function magma_uplo_const(chr) &
+      & bind(C,name="magma_uplo_const")
+      use iso_c_binding
+      character(c_char),value :: chr
+    end function
   end interface
 
   private wt_info
@@ -680,7 +710,7 @@ contains
 #endif
   end subroutine
 
- !magma does not support ssytri etc. only cup version
+  !magma does not support ssytri etc. only cup version
   subroutine glapack_ssytri(uplo,n,A,lda,ipiv,work,info)
     character        :: uplo
     integer          :: n
@@ -690,11 +720,11 @@ contains
     real(4)          :: work(n)
     !integer          :: lwork
     integer          :: info
-!#ifdef MAGMA
-!    call magmaf_ssytri( uplo, n, A, lda, ipiv, work, lwork, info )
-!#else
+    !#ifdef MAGMA
+    !    call magmaf_ssytri( uplo, n, A, lda, ipiv, work, lwork, info )
+    !#else
     call ssytri( uplo, n, A, lda, ipiv, work,info )
-!#endif
+  !#endif
   end subroutine
 
   subroutine glapack_dsytri(uplo,n,A,lda,ipiv,work,info)
@@ -706,11 +736,11 @@ contains
     real(8)          :: work(n)
     integer          :: lwork
     integer          :: info
-!#ifdef MAGMA
-!    call magmaf_dsytri( uplo, n, A, lda, ipiv, work, lwork, info )
-!#else
+    !#ifdef MAGMA
+    !    call magmaf_dsytri( uplo, n, A, lda, ipiv, work, lwork, info )
+    !#else
     call dsytri( uplo, n, A, lda, ipiv, work, info )
-!#endif
+  !#endif
   end subroutine
 
   subroutine glapack_chetri(uplo,n,A,lda,ipiv,work,info)
@@ -722,11 +752,11 @@ contains
     complex(4)       :: work(n)
     integer          :: lwork
     integer          :: info
-!#ifdef MAGMA
-!    call magmaf_chetri( uplo, n, A, lda, ipiv, work, lwork, info )
-!#else
+    !#ifdef MAGMA
+    !    call magmaf_chetri( uplo, n, A, lda, ipiv, work, lwork, info )
+    !#else
     call chetri( uplo, n, A, lda, ipiv, work,info )
-!#endif
+  !#endif
   end subroutine
 
   subroutine glapack_zhetri(uplo,n,A,lda,ipiv,work,info)
@@ -738,15 +768,15 @@ contains
     complex(8)       :: work(n)
     integer          :: lwork
     integer          :: info
-!#ifdef MAGMA
-!    call magmaf_zhetri( uplo, n, A, lda, ipiv, work, lwork, info )
-!#else
+    !#ifdef MAGMA
+    !    call magmaf_zhetri( uplo, n, A, lda, ipiv, work, lwork, info )
+    !#else
     call zhetri2x( uplo, n, A, lda, ipiv, work, info )
-!#endif
+  !#endif
   end subroutine
 
 
- !magma does not support ssytri2x etc. only cup version
+  !magma does not support ssytri2x etc. only cup version
   subroutine glapack_ssytri2x(uplo,n,A,lda,ipiv,work,lwork,info)
     character        :: uplo
     integer          :: n
@@ -756,11 +786,11 @@ contains
     real(4)          :: work(lwork)
     integer          :: lwork
     integer          :: info
-!#ifdef MAGMA
-!    call magmaf_ssytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-!#else
+    !#ifdef MAGMA
+    !    call magmaf_ssytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+    !#else
     call ssytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-!#endif
+  !#endif
   end subroutine
 
   subroutine glapack_dsytri2x(uplo,n,A,lda,ipiv,work,lwork,info)
@@ -772,11 +802,11 @@ contains
     real(8)          :: work(lwork)
     integer          :: lwork
     integer          :: info
-!#ifdef MAGMA
-!    call magmaf_dsytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-!#else
+    !#ifdef MAGMA
+    !    call magmaf_dsytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+    !#else
     call dsytri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-!#endif
+  !#endif
   end subroutine
 
   subroutine glapack_chetri2x(uplo,n,A,lda,ipiv,work,lwork,info)
@@ -788,11 +818,11 @@ contains
     complex(4)       :: work(lwork)
     integer          :: lwork
     integer          :: info
-!#ifdef MAGMA
-!    call magmaf_chetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-!#else
+    !#ifdef MAGMA
+    !    call magmaf_chetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+    !#else
     call chetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-!#endif
+  !#endif
   end subroutine
 
   subroutine glapack_zhetri2x(uplo,n,A,lda,ipiv,work,lwork,info)
@@ -804,11 +834,11 @@ contains
     complex(8)       :: work(lwork)
     integer          :: lwork
     integer          :: info
-!#ifdef MAGMA
-!    call magmaf_zhetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-!#else
+    !#ifdef MAGMA
+    !    call magmaf_zhetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
+    !#else
     call zhetri2x( uplo, n, A, lda, ipiv, work, lwork, info )
-!#endif
+  !#endif
   end subroutine
 
   subroutine glapack_ssyev0( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
@@ -886,7 +916,7 @@ contains
     !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
   end subroutine
 
-  subroutine glapack_cheev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
+  subroutine glapack_cheevd_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
     character       :: jobz
     character       :: uplo
     integer :: n
@@ -903,9 +933,9 @@ contains
     allocate(w(n))
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
     ! calculate work array size used in ev
-    call glapack_cheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
+    call glapack_cheevd( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
     if(info/=0) then
-      write(6,*) 'info in glapack cheev ',info; stop
+      write(6,*) 'info in glapack cheevd ',info; stop
     end if
     lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
     lwork=max(1,lwork)
@@ -914,7 +944,7 @@ contains
     !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
   end subroutine
 
-  subroutine glapack_zheev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
+  subroutine glapack_zheevd_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
     character       :: jobz
     character       :: uplo
     integer :: n
@@ -931,9 +961,9 @@ contains
     allocate(w(n))
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
     ! calculate work array size used in ev
-    call glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
+    call glapack_zheevd( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
     if(info/=0) then
-      write(6,*) 'info in glapack zheev ',info; stop
+      write(6,*) 'info in glapack zheevd ',info; stop
     end if
     lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
     lwork=max(1,lwork)
@@ -952,7 +982,7 @@ contains
   !    integer :: lwork
   !    integer :: lrwork
   !    integer :: liwork
-  !    !integer :: lwmax
+  !  !integer :: lwmax
   !    integer:: iwork(1)
   !    !real:: rtmp(1)
   !    class(*),allocatable:: work(:)
@@ -1095,7 +1125,7 @@ contains
 #endif
   end subroutine
 
-  subroutine glapack_cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+  subroutine glapack_cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     character        :: jobz
     character        :: uplo
     integer          :: n
@@ -1150,7 +1180,7 @@ contains
 #endif
   end subroutine
 
-  subroutine glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+  subroutine glapack_zheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     character        :: jobz  ! 'V' or 'N'
     character        :: uplo  ! 'L' or 'U'
     integer          :: n
@@ -1821,7 +1851,6 @@ contains
   !#endif
   end subroutine
 
-
   subroutine wt_info(str,info)
     character(*):: str
     integer:: info
@@ -1830,6 +1859,436 @@ contains
       stop
     end if
   end subroutine
+
+  subroutine glapack_cheevdx_prm(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,lwork,lrwork,liwork,info)
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex :: A(lda,*)
+    integer :: lda
+    real :: vl,vu
+    integer :: il,iu
+    integer :: m(*)
+    real :: w(*)
+    complex :: work(1)
+    integer :: lwork
+    real :: rwork(1)
+    integer :: lrwork
+    integer :: iwork(1)
+    integer :: liwork
+    integer :: info
+    !integer :: jobzt,ranget,uplot
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    !    call magma_cheevdx(jobzt,ranget,uplot,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    call magmaf_cheevdx(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    lwork=real(work(1))
+    lrwork=rwork(1)
+    liwork=iwork(1)
+  end subroutine
+
+  subroutine glapack_zheevdx_prm(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,lwork,lrwork,liwork,info)
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex(8) :: A(lda,*)
+    integer :: lda
+    real(8) :: vl,vu
+    integer :: il,iu
+    integer :: m(*)
+    real(8) :: w(*)
+    complex(8) :: work(1)
+    integer :: lwork
+    real(8) :: rwork(1)
+    integer :: lrwork
+    integer :: iwork(1)
+    integer :: liwork
+    integer :: info
+    !integer :: jobzt,ranget,uplot
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    !    call magma_cheevdx(jobzt,ranget,uplot,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    call magmaf_zheevdx(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    lwork=real(work(1))
+    lrwork=rwork(1)
+    liwork=iwork(1)
+  end subroutine
+
+  subroutine glapack_cheevdx_2stage_prm(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,lwork,lrwork,liwork,info)
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex :: A(lda,*)
+    integer :: lda
+    real :: vl,vu
+    integer :: il,iu
+    integer :: m(*)   ! number of eigenvalues found
+    real :: w(*)
+    complex :: work(1)
+    integer :: lwork
+    real :: rwork(1)
+    integer :: lrwork
+    integer :: iwork(1)
+    integer :: liwork
+    integer :: info
+    !integer :: jobzt,ranget,uplot
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    !    call magma_cheevdx_2stage(jobzt,ranget,uplot,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    call magmaf_cheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    lwork=real(work(1))
+    lrwork=rwork(1)
+    liwork=iwork(1)
+  end subroutine
+
+  subroutine glapack_zheevdx_2stage_prm(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,lwork,lrwork,liwork,info)
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex(8) :: A(lda,*)
+    integer :: lda
+    real(8) :: vl,vu
+    integer :: il,iu
+    integer :: m(*)   ! number of eigenvalues found
+    real(8) :: w(*)
+    complex(8) :: work(1)
+    integer :: lwork
+    real(8) :: rwork(1)
+    integer :: lrwork
+    integer :: iwork(1)
+    integer :: liwork
+    integer :: info
+    !integer :: jobzt,ranget,uplot
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    !    call magma_cheevdx_2stage(jobzt,ranget,uplot,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    call magmaf_zheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    lwork=real(work(1))
+    lrwork=rwork(1)
+    liwork=iwork(1)
+  end subroutine
+
+  subroutine glapack_zheevdx_2stage_m_prm(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,lwork,lrwork,liwork,info)
+    integer :: ngpu
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex(8) :: A(lda,*)
+    integer :: lda
+    real(8) :: vl,vu
+    integer :: il,iu
+    integer :: m(*)   ! number of eigenvalues found
+    real(8) :: w(*)   ! eigenvalues
+    complex(8) :: work(1)
+    integer :: lwork
+    real(8) :: rwork(1)
+    integer :: lrwork
+    integer :: iwork(1)
+    integer :: liwork
+    integer :: info
+    !integer :: jobzt,ranget,uplot
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    !    call magma_cheevdx_2stage_m(ngpu,jobzt,ranget,uplot,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    call magmaf_zheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    lwork=real(work(1))
+    lrwork=rwork(1)
+    liwork=iwork(1)
+  end subroutine
+
+  subroutine glapack_cheevdx(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex :: A(lda,*)
+    integer :: lda
+    real :: vl,vu
+    integer :: il,iu
+    integer :: m(*)
+    real :: w(*)
+    complex :: work(*)
+    integer :: lwork
+    real :: rwork(*)
+    integer :: lrwork
+    integer :: iwork(*)
+    integer,value :: liwork
+    integer :: info
+    !    integer :: jobzt,ranget,uplot
+    !
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    call magmaf_cheevdx(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+  end subroutine
+
+  subroutine glapack_zheevdx(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex(8) :: A(lda,*)
+    integer :: lda
+    real(8) :: vl,vu
+    integer :: il,iu
+    integer :: m(*)
+    real(8) :: w(*)
+    complex(8) :: work(*)
+    integer :: lwork
+    real(8) :: rwork(*)
+    integer :: lrwork
+    integer :: iwork(*)
+    integer,value :: liwork
+    integer :: info
+    !    integer :: jobzt,ranget,uplot
+    !
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    call magmaf_zheevdx(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+  end subroutine
+
+  subroutine glapack_cheevdx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    integer :: ngpu
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex :: A(lda,*)
+    integer :: lda
+    real :: vl,vu
+    integer :: il,iu
+    integer :: m(*)
+    real :: w(*)
+    complex :: work(*)
+    integer :: lwork
+    real :: rwork(*)
+    integer :: lrwork
+    integer :: iwork(*)
+    integer,value :: liwork
+    integer :: info
+    !    integer :: jobzt,ranget,uplot
+    !
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    call magmaf_cheevdx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+  end subroutine
+
+  subroutine glapack_zheevdx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    integer :: ngpu
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex(8) :: A(lda,*)
+    integer :: lda
+    real(8) :: vl,vu
+    integer :: il,iu
+    integer :: m(*)
+    real(8) :: w(*)
+    complex(8) :: work(*)
+    integer :: lwork
+    real(8) :: rwork(*)
+    integer :: lrwork
+    integer :: iwork(*)
+    integer,value :: liwork
+    integer :: info
+    !    integer :: jobzt,ranget,uplot
+    !
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    call magmaf_zheevdx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+  end subroutine
+
+
+  subroutine glapack_cheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex :: A(lda,*)
+    integer :: lda
+    real :: vl,vu
+    integer :: il,iu
+    integer :: m(*)   ! number of eigenvalues found
+    real :: w(*) ! eigenvalues
+    complex :: work(*)
+    integer :: lwork
+    real :: rwork(*)
+    integer :: lrwork
+    integer :: iwork(*)
+    integer :: liwork
+    integer :: info
+    !    integer :: jobzt,ranget,uplot
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    call magmaf_cheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+  end subroutine
+
+  subroutine glapack_zheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex(8) :: A(lda,*)
+    integer :: lda
+    real(8) :: vl,vu
+    integer :: il,iu
+    integer :: m(*)   ! number of eigenvalues found
+    real(8) :: w(*) ! eigenvalues
+    complex(8) :: work(*)
+    integer :: lwork
+    real(8) :: rwork(*)
+    integer :: lrwork
+    integer :: iwork(*)
+    integer :: liwork
+    integer :: info
+    !    integer :: jobzt,ranget,uplot
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    call magmaf_zheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+  end subroutine
+
+  subroutine glapack_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    integer :: ngpu
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex :: A(lda,*)
+    integer :: lda
+    real :: vl,vu
+    integer :: il,iu
+    integer :: m(*)   ! number of eigenvalues found
+    real :: w(*) ! eigenvalues
+    complex :: work(*)
+    integer :: lwork
+    real :: rwork(*)
+    integer :: lrwork
+    integer :: iwork(*)
+    integer :: liwork
+    integer :: info
+    integer :: jobzt,ranget,uplot
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    call magmaf_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+  end subroutine
+
+  subroutine glapack_zheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    integer :: ngpu
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex(8) :: A(lda,*)
+    integer :: lda
+    real(8) :: vl,vu
+    integer :: il,iu
+    integer :: m(*)   ! number of eigenvalues found
+    real(8) :: w(*) ! eigenvalues
+    complex(8) :: work(*)
+    integer :: lwork
+    real(8) :: rwork(*)
+    integer :: lrwork
+    integer :: iwork(*)
+    integer :: liwork
+    integer :: info
+    integer :: jobzt,ranget,uplot
+    !    jobzt=magma_vec_const(jobz)
+    !    ranget=magma_range_const(range)
+    !    uplot=magma_uplo_const(uplo)
+    call magmaf_zheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+  end subroutine
+
+!  subroutine magma_cheevdx(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info) &
+!    & bind(C,name="magma_cheevdx")
+!    use iso_c_binding
+!    integer(c_int),value :: jobz
+!    integer(c_int),value :: range
+!    integer(c_int),value :: uplo
+!    integer(c_int),value :: n
+!    complex(c_float_complex) :: A(lda,*)
+!    integer(c_int),value :: lda
+!    real(c_float),value :: vl,vu
+!    integer(c_int),value :: il,iu
+!    integer(c_int) :: m(*)
+!    real(c_float) :: w(*)
+!    complex(c_float_complex) :: work(*)
+!    integer(c_int),value :: lwork
+!    real(c_float) :: rwork(*)
+!    integer(c_int),value :: lrwork
+!    integer(c_int) :: iwork(*)
+!    integer(c_int),value :: liwork
+!    integer(c_int) :: info
+!  end subroutine
+!  !
+!  !    ! for single GPU
+!  subroutine magma_cheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info) &
+!    & bind(C,name="magma_cheevdx_2stage")
+!    use iso_c_binding
+!    integer(c_int),value :: jobz
+!    integer(c_int),value :: range
+!    integer(c_int),value :: uplo
+!    integer(c_int),value :: n
+!    complex(c_float_complex) :: A(lda,*)
+!    integer(c_int),value :: lda
+!    real(c_float),value :: vl,vu
+!    integer(c_int),value :: il,iu
+!    integer(c_int) :: m(*)   ! number of eigenvalues found
+!    real(c_float) :: w(*) ! eigenvalues
+!    complex(c_float_complex) :: work(*)
+!    integer(c_int),value :: lwork
+!    real(c_float) :: rwork(*)
+!    integer(c_int),value :: lrwork
+!    integer(c_int) :: iwork(*)
+!    integer(c_int),value :: liwork
+!    integer(c_int) :: info
+!  end subroutine
+!
+!  ! for multiple GPU
+!  subroutine magma_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info) &
+!    & bind(C,name="magma_cheevdx_2stage_m")
+!    use iso_c_binding
+!    integer(c_int),value :: ngpu
+!    integer(c_int),value :: jobz
+!    integer(c_int),value :: range
+!    integer(c_int),value :: uplo
+!    integer(c_int),value :: n
+!    complex(c_float_complex) :: A(lda,*)
+!    integer(c_int),value :: lda
+!    real(c_float),value :: vl,vu
+!    integer(c_int),value :: il,iu
+!    integer(c_int) :: m(*)
+!    real(c_float) :: w(*)
+!    complex(c_float_complex) :: work(*)
+!    integer(c_int),value :: lwork
+!    real(c_float) :: rwork(*)
+!    integer(c_int),value :: lrwork
+!    integer(c_int) :: iwork(*)
+!    integer(c_int),value :: liwork
+!    integer(c_int) :: info
+!  end subroutine
+
 end module
 
            ! if(same_type_as(dA,dB).and.same_type_as(dA,dC).and. &
