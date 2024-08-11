@@ -33,12 +33,17 @@ module glapack
 
   interface glapack_ev_prm
     !module procedure glapack_gev_prm
-    module procedure glapack_ssyev_prm,glapack_dsyev_prm
+    module procedure glapack_ssyev_prm,glapack_dsyev_prm,glapack_cheev_prm,glapack_zheev_prm
+  end interface
+
+  interface glapack_evd_prm
+    !module procedure glapack_gev_prm
+    module procedure glapack_ssyevd_prm,glapack_dsyevd_prm,glapack_cheevd_prm,glapack_zheevd_prm
   end interface
 
 #ifdef MAGMA
   interface glapack_evx_prm
-    module procedure glapack_cheevx_prm,glapack_zheevx_prm,glapack_cheevx_m_prm,glapack_zheevx_m_prm
+    module procedure glapack_cheevx_prm,glapack_zheevx_prm !,glapack_cheevx_m_prm,glapack_zheevx_m_prm
   end interface
 #else
   interface glapack_evx_prm
@@ -47,8 +52,8 @@ module glapack
 #endif
 
 #ifdef MAGMA
-  interface glapack_evx_2stage_prm
-    module procedure glapack_cheevx_2stage_prm,glapack_zheevx_2stage_prm,glapack_cheevx_2stage_m_prm,glapack_zheevx_2stage_m_prm
+  interface glapack_evdx_2stage_prm
+    module procedure glapack_cheevdx_2stage_prm,glapack_zheevdx_2stage_prm,glapack_cheevdx_2stage_m_prm,glapack_zheevdx_2stage_m_prm
   end interface
 #else
   interface glapack_evx_2stage_prm
@@ -89,18 +94,28 @@ module glapack
   end interface
 
   interface glapack_ev
-    module procedure glapack_ssyev,glapack_dsyev !,glapack_cheevx,glapack_zheevx,glapack_ssyev0
+    module procedure glapack_ssyev,glapack_dsyev,glapack_cheev,glapack_zheev
+    !module procedure  glapack_gev
+  end interface
+
+  interface glapack_evd
+    module procedure glapack_ssyevd,glapack_dsyevd,glapack_cheevd,glapack_zheevd
     !module procedure  glapack_gev
   end interface
 
   interface glapack_evx
-    module procedure glapack_cheevx,glapack_zheevx,glapack_cheevx_m,glapack_zheevx_m
+    module procedure glapack_cheevx,glapack_zheevx !,glapack_cheevx_m,glapack_zheevx_m
   end interface
 
+#ifdef MAGMA
+  interface glapack_evdx_2stage
+    module procedure glapack_cheevdx_2stage,glapack_zheevdx_2stage,glapack_cheevdx_2stage_m,glapack_zheevdx_2stage_m
+  end interface
+#else
   interface glapack_evx_2stage
-    module procedure glapack_cheevx_2stage,glapack_zheevx_2stage,glapack_cheevx_2stage_m,glapack_zheevx_2stage_m
+    module procedure glapack_cheevx_2stage,glapack_zheevx_2stage !,glapack_cheevx_2stage_m,glapack_zheevx_2stage_m
   end interface
-
+#endif
   interface glapack_gst
     module procedure glapack_ssygst,glapack_dsygst,glapack_chegst,glapack_zhegst
     !module procedure glapack_ggst
@@ -861,7 +876,7 @@ contains
   !#endif
   end subroutine
 
-  subroutine glapack_ssyev0( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+  subroutine glapack_ssyev0( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, info )
     character        :: jobz
     character        :: uplo
     integer          :: n
@@ -872,15 +887,130 @@ contains
     integer          :: lwork
     real             :: rwork(*)    ! dummy
     integer          :: lrwork      ! dummy
-    integer          :: iwork(*)
-    integer          :: liwork
+    !integer          :: iwork(*)
+    !integer          :: liwork
     integer          :: info
     !integer :: asize(1)
     !asize(1)=size(A)
-    call glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    call glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork, info )
   end subroutine
 
-  subroutine glapack_ssyev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
+  subroutine glapack_ssyev_prm(jobz,uplo,n,A,lda,lwork,lrwork)
+    character       :: jobz
+    character       :: uplo
+    integer :: n
+    real,target:: A(lda,n)
+    integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    !integer :: liwork
+    real :: work(1)   !real,allocatable:: work(:)
+    real :: rwork(1)  !real,allocatable:: rwork(:)
+    !integer :: iwork(1)  !integer,allocatable :: iwork(:)
+    real,allocatable :: w(:)
+    integer :: info
+    allocate(w(n))
+    lwork  = -1
+    !liwork=-1
+    lrwork=-1  ! calculate work array size
+    ! calculate work array size used in ev
+    call glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork,info )
+    if(info/=0) then
+      write(6,*) 'info in glapack_ssyev ',info; stop
+    end if 
+    lwork = int(work(1))
+    !liwork=iwork(1)  ! added
+    lwork=max(1,lwork)
+    lrwork=max(1,3*n-2)
+    !liwork=max(1,liwork)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
+  end subroutine
+
+  subroutine glapack_dsyev_prm(jobz,uplo,n,A,lda,lwork,lrwork)
+    character       :: jobz
+    character       :: uplo
+    integer :: n
+    real(8),target:: A(lda,n)
+    integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    !integer :: liwork
+    real(8):: work(1)   !    real(8),allocatable:: work(1)
+    real(8):: rwork(1)  !    real(8),allocatable:: rwork(1)
+    real(8),allocatable :: w(:)      !    real(8),allocatable:: w(:)
+    !integer ::iwork(1)  !    integer,allocatable :: iwork(:)
+    integer :: info
+    allocate(w(n))
+    lwork  = -1; lrwork=-1  ! calculate work array size
+    ! calculate work array size used in ev
+    call glapack_dsyev( jobz, uplo, n, A, lda, w, work, lwork,info )
+    if(info/=0) then
+      write(6,*) 'info in glapack dsyev ',info; stop
+    end if
+    lwork = int(work(1));
+    !liwork=iwork(1)  ! added
+    lwork=max(1,lwork)
+    lrwork=max(1,3*n-2)
+    !liwork=max(1,liwork)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
+  end subroutine
+
+  subroutine glapack_cheev_prm(jobz,uplo,n,A,lda,lwork,lrwork)
+    character       :: jobz
+    character       :: uplo
+    integer :: n
+    complex,target:: A(lda,n)
+    integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    !integer :: liwork
+    complex :: work(1)   !real,allocatable:: work(:)
+    real :: rwork(1)  !real,allocatable:: rwork(:)
+    !integer :: iwork(1)  !integer,allocatable :: iwork(:)
+    real,allocatable :: w(:)
+    integer :: info
+    allocate(w(n))
+    lwork  = -1; lrwork=-1  ! calculate work array size
+    ! calculate work array size used in ev
+    call glapack_cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
+    if(info/=0) then
+      write(6,*) 'info in glapack_ssyev ',info; stop
+    end if
+    lwork = int(work(1))
+    lwork=max(1,lwork)
+    lrwork=max(1,3*n-2)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
+  end subroutine
+
+  subroutine glapack_zheev_prm(jobz,uplo,n,A,lda,lwork,lrwork)
+    character       :: jobz
+    character       :: uplo
+    integer :: n
+    complex(8),target:: A(lda,n)
+    integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    integer :: liwork
+    complex(8) :: work(1)   !real,allocatable:: work(:)
+    real(8) :: rwork(1)  !real,allocatable:: rwork(:)
+    integer :: iwork(1)  !integer,allocatable :: iwork(:)
+    real(8),allocatable :: w(:)
+    integer :: info
+    allocate(w(n))
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    ! calculate work array size used in ev
+    call glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
+    if(info/=0) then
+      write(6,*) 'info in glapack_ssyev ',info; stop
+    end if
+    lwork = int(work(1)); liwork=iwork(1)  ! added
+    lwork=max(1,lwork)
+    lrwork=max(1,3*n-2)
+    !liwork=max(1,liwork)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
+  end subroutine
+
+  subroutine glapack_ssyevd_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
     character       :: jobz
     character       :: uplo
     integer :: n
@@ -897,18 +1027,18 @@ contains
     allocate(w(n))
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
     ! calculate work array size used in ev
-    call glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork,iwork,liwork,info )
+    call glapack_ssyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
     if(info/=0) then
       write(6,*) 'info in glapack_ssyev ',info; stop
-    end if 
-    lwork = int(work(1)); liwork=iwork(1)  ! added
-    lwork=max(1,lwork)
+    end if
+    lwork = int(work(1));
+    liwork=1
     lrwork=1
-    liwork=max(1,liwork)
+    !liwork=max(1,liwork)
     !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
   end subroutine
 
-  subroutine glapack_dsyev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
+  subroutine glapack_dsyevd_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
     character       :: jobz
     character       :: uplo
     integer :: n
@@ -923,203 +1053,190 @@ contains
     integer ::iwork(1)  !    integer,allocatable :: iwork(:)
     integer :: info
     allocate(w(n))
-    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    lwork  = -1; lrwork=-1  ! calculate work array size
     ! calculate work array size used in ev
-    call glapack_dsyev( jobz, uplo, n, A, lda, w, work, lwork,iwork,liwork,info )
+    call glapack_dsyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
     if(info/=0) then
       write(6,*) 'info in glapack dsyev ',info; stop
     end if
-    lwork = int(work(1)); liwork=iwork(1)  ! added
-    lwork=max(1,lwork)
+    lwork = int(work(1));
+    liwork=1
     lrwork=1
-    liwork=max(1,liwork)
+    !liwork=max(1,liwork)
     !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
   end subroutine
 
-  !  subroutine glapack_cheevx_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
-  !    character       :: jobz
-  !    character       :: uplo
-  !    integer :: n
-  !    complex,target:: A(lda,n)
-  !    integer :: lda
-  !    integer :: lwork
-  !    integer :: lrwork
-  !    integer :: liwork
-  !    complex:: work(1)  !complex,allocatable:: work(:)
-  !    real:: rwork(1)    !real,allocatable:: rwork(:)
-  !    real,allocatable :: w(:) !real,allocatable:: w(:)
-  !    integer:: iwork(1) !integer,allocatable :: iwork(:)
-  !    integer :: info
-  !    allocate(w(n))
-  !    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
-  !    ! calculate work array size used in ev
-  !    call glapack_cheevx( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
-  !    if(info/=0) then
-  !      write(6,*) 'info in glapack cheevx ',info; stop
-  !    end if
-  !    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
-  !    lwork=max(1,lwork)
-  !    lrwork=max(1,lrwork)
-  !    liwork=max(1,liwork)
-  !    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
-  !  end subroutine
+  subroutine glapack_cheevd_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
+    character       :: jobz
+    character       :: uplo
+    integer :: n
+    complex,target:: A(lda,n)
+    integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    integer :: liwork
+    complex :: work(1)   !real,allocatable:: work(:)
+    real :: rwork(1)  !real,allocatable:: rwork(:)
+    integer :: iwork(1)  !integer,allocatable :: iwork(:)
+    real,allocatable :: w(:)
+    integer :: info
+    allocate(w(n))
+    lwork  = -1; lrwork=-1  ! calculate work array size
+    ! calculate work array size used in ev
+    call glapack_cheevd( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
+    if(info/=0) then
+      write(6,*) 'info in glapack_ssyev ',info; stop
+    end if
+    lwork = int(real(work(1)))
+    lrwork= int(rwork(1))
+    liwork= iwork(1)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
+  end subroutine
 
-  !  subroutine glapack_zheevx_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
-  !    character       :: jobz
-  !    character       :: uplo
-  !    integer :: n
-  !    complex(8),target:: A(lda,n)
-  !    integer :: lda
-  !    integer :: lwork
-  !    integer :: lrwork
-  !    integer :: liwork
-  !    complex(8) :: work(1)  !complex(8),allocatable:: work(:)
-  !    real(8):: rwork(1)    !real(8),allocatable:: rwork(:)
-  !    real(8),allocatable :: w(:)  !real(8),allocatable:: w(:)
-  !    integer:: iwork(1)    !integer,allocatable :: iwork(:)
-  !    integer :: info
-  !    allocate(w(n))
-  !    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
-  !    ! calculate work array size used in ev
-  !    call glapack_zheevx( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
-  !    if(info/=0) then
-  !      write(6,*) 'info in glapack zheevx ',info; stop
-  !    end if
-  !    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
-  !    lwork=max(1,lwork)
-  !    lrwork=max(1,lrwork)
-  !    liwork=max(1,liwork)
-  !    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
-  !  end subroutine
+  subroutine glapack_zheevd_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
+    character       :: jobz
+    character       :: uplo
+    integer :: n
+    complex(8),target:: A(lda,n)
+    integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    integer :: liwork
+    complex(8) :: work(1)   !real,allocatable:: work(:)
+    real(8) :: rwork(1)  !real,allocatable:: rwork(:)
+    integer :: iwork(1)  !integer,allocatable :: iwork(:)
+    real(8),allocatable :: w(:)
+    integer :: info
+    allocate(w(n))
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    ! calculate work array size used in ev
+    call glapack_zheevd( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
+    if(info/=0) then
+      write(6,*) 'info in glapack_ssyev ',info; stop
+    end if
+    lwork = int(work(1))
+    lrwork=int(rwork(1))
+    liwork=iwork(1)  ! added
+    !liwork=max(1,liwork)
+    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
+  end subroutine
 
-  !  ! this estimate waork array size lwork, liwork
-  !  subroutine glapack_gev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
-  !    character       :: jobz
-  !    character       :: uplo
-  !    integer :: n
-  !    class(*),target:: A(lda,n)
-  !    integer :: lda
-  !    integer :: lwork
-  !    integer :: lrwork
-  !    integer :: liwork
-  !  !integer :: lwmax
-  !    integer:: iwork(1)
-  !    !real:: rtmp(1)
-  !    class(*),allocatable:: work(:)
-  !    class(*),allocatable:: rwork(:)
-  !    class(*),allocatable:: w(:)
-  !    integer :: info
-  !            !allocate(work(1),rwork(1),w(1))
-  !    select type (A)
-  !      type is (real)
-  !      allocate(real::work(1),rwork(1),w(1))
-  !      type is (real(8))
-  !      allocate(real(8)::work(1),rwork(1),w(1))
-  !      type is (complex)
-  !      allocate(complex::work(1))
-  !      allocate(real::rwork(1),w(1))
-  !      type is (complex(8))
-  !      allocate(complex(8)::work(1))
-  !      allocate(real(8)::rwork(1),w(1))
-  !    end select
-  !    lwork  = -1
-  !    lrwork = -1
-  !    liwork = -1
-  !    !lrwork=1
-  !    ! calculate work array size used in ev
-  !    call glapack_gev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork, liwork, info )
-  !    if(info/=0) call wt_info('magmaf_ssyevx',info)
-  !    select type (work)
-  !      type is (real)
-  !      lwork = work(1)
-  !      type is (real(8))
-  !      lwork = work(1)
-  !      type is (complex)
-  !      lwork = work(1)
-  !      type is (complex(8))
-  !      lwork = work(1)
-  !    end select
-  !    select type (rwork)
-  !      type is (real)
-  !      lrwork=rwork(1)
-  !      type is (real(8))
-  !      lrwork=rwork(1)
-  !    end select
-  !    liwork = iwork(1)
-  !    lwork=max(1,lwork)
-  !    lrwork=max(1,lrwork)
-  !    liwork=max(1,liwork)
-  !    !lworkt =1 + 6*nb + 2*nb**2
-  !    !lwork = max(lwork,lworkt)    ! for strange lwork
-  !    !write(6,'(a,4i15)') 'n,lwork,lrwork,liwork in glapack=',n,lwork,lrwork,liwork  ! for test
-  !    if(info/=0) then
-  !      write(6,'(a,3i10)') 'cannt estimate lapack_param, lwork,lrwork,liwork=',lwork,lrwork,liwork
-  !      stop
-  !    end if
-  !  end subroutine
+  subroutine glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork, info )
+    character        :: jobz
+    character        :: uplo
+    integer          :: n
+    real             :: A(lda,n)  ! real symmetric matrix -> eigenvector
+    integer          :: lda
+    real             :: w(*)      ! eigenvalue
+    real             :: work(*)
+    integer          :: lwork
+    !integer          :: iwork(*)
+    !integer          :: liwork
+    integer          :: info
+          !integer          :: ngpu=1
+          !integer :: asize(1)
+          !asize(1)=size(A)
+#ifdef MAGMA
+    ! call magmaf_ssyev( jobz, uplo, n, A, lda, w, work, lwork, info )
+    !    if(ngpu==1) then
+    !      call magmaf_ssyev( jobz, uplo, n, A, lda, w, work, lwork, info )
+    !    else
+    !      call magmaf_ssyev_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, info )
+    !    end if
+#else
+    call ssyev( jobz, uplo, n, A, lda, w, work, lwork, info )
+#endif
+  end subroutine
 
-  !  ! calculate work array size
-  !  subroutine glapack_gev( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
-  !    character        :: jobz
-  !    character        :: uplo
-  !    integer          :: n
-  !    class(*),target:: A(lda,n)
-  !    integer          :: lda
-  !    ! use work array in this module
-  !    class(*),target:: w(n)  !w(:)          ! real or real(8)
-  !    class(*),target:: work(lwork)   !work(*)
-  !    integer          :: lwork
-  !    class(*),target:: rwork(lrwork)   ! only for complex
-  !    integer          ::  lrwork       ! only for complex
-  !    integer          :: iwork(liwork)
-  !    integer          :: liwork
-  !    integer          :: info
-  !
-  !    real,pointer:: sap(:,:),sworkp(:)
-  !    real(8),pointer:: dap(:,:),dworkp(:)
-  !    complex,pointer:: cap(:,:),cworkp(:)
-  !    complex(8),pointer:: zap(:,:),zworkp(:)
-  !    real,pointer:: swp(:)
-  !    real(8),pointer:: dwp(:)
-  !    real,pointer::srworkp(:)
-  !    real(8),pointer::drworkp(:)
-  !
-  !    call glapack_set_class2dp(A,lda,n,sap,dap,cap,zap)
-  !    call glapack_set_class1dp(work,1,sworkp,dworkp,cworkp,zworkp)
-  !    call glapack_set_class1drp(w,1,swp,dwp)
-  !    call glapack_set_class1drp(rwork,1,srworkp,drworkp)
-  !
-  !    select type (A)
-  !      type is (real)
-  !      !if(same_type_as(A,W).and.same_type_as(A,work)) then
-  !      !    call glapack_zungqr( m, n, k, A, lda, tau, dt, nb, info )
-  !      !end if
-  !      call glapack_ssyev( jobz, uplo, n, sAp, lda, sWp, sworkp, lwork, iwork, liwork, info )
-  !      type is (real(8))
-  !      !if(same_type_as(A,W).and.same_type_as(A,work)) then
-  !      !    call glapack_dsyev( jobz, uplo, n, A, lda, W, work, lwork, iwork, liwork, info )
-  !      !end if
-  !      call glapack_dsyev( jobz, uplo, n, dAp, lda, dWp, dworkp, lwork, iwork, liwork, info )
-  !      type is (complex)
-  !      !if(same_type_as(A,W).and.same_type_as(A,work)) then
-  !      !    select type (rwork)
-  !      !        type is (real)
-  !      !        call glapack_cheev( jobz, uplo, n, A, lda, W, work, lwork, rwork, lrwork, iwork, liwork, info )
-  !      !    end select
-  !      call glapack_cheev( jobz, uplo, n, cAp, lda, sWp, cworkp, lwork, srworkp, lrwork, iwork, liwork, info )
-  !      !end if
-  !      type is (complex(8))
-  !      !if(same_type_as(A,W).and.same_type_as(A,work)) then
-  !      !    select type (rwork)
-  !      !        type is (real(8))
-  !      !        call glapack_zheev( jobz, uplo, n, A, lda, W, work, lwork, rwork, lrwork, iwork, liwork, info )
-  !      !    end select
-  !      call glapack_zheev( jobz, uplo, n, zAp, lda, dWp, zworkp, lwork, drworkp, lrwork, iwork, liwork, info )
-  !        !end if
-  !    end select
-  !  end subroutine
+  subroutine glapack_dsyev( jobz, uplo, n, A, lda, w, work, lwork, info )
+    character        :: jobz  ! 'V' or 'N'
+    character        :: uplo  ! 'L' or 'U'
+    integer          :: n
+    real(8)          :: A(lda,n)  ! real symmetric matrix -> eigenvector
+    integer          :: lda
+    real(8)          :: w(*)      ! eigenvalue
+    real (8)         :: work(*)
+    integer          :: lwork
+    !integer          :: iwork(*)
+    !integer          :: liwork
+    integer          :: info
+    integer          :: ngpu = 1
+        !integer          :: asize(1)
+        !asize(1)=size(A)
+#ifdef MAGMA
+    ! call magmaf_dsyev( jobz, uplo, n, A, lda, w, work, lwork, info )
+    !    if(ngpu==1) then
+    !      call magmaf_dsyev( jobz, uplo, n, A, lda, w, work, lwork, info )
+    !    else
+    !      call magmaf_dsyev_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, info )
+    !    end if
+#else
+    call dsyev( jobz, uplo, n, A, lda, w, work, lwork, info )
+    !liwork=1
+#endif
+  end subroutine
 
-  subroutine glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+  subroutine glapack_cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
+    character        :: jobz
+    character        :: uplo
+    integer          :: n
+    complex          :: A(lda,n)  ! Hermite matrix -> eigenvector
+    integer          :: lda
+    real             :: w(*)      ! eigenvalue
+    complex          :: work(*)
+    integer          :: lwork
+    real             :: rwork(*)
+    integer          :: lrwork
+    !integer          :: iwork(*)
+    !integer          :: liwork
+    integer          :: info
+    integer          :: ngpu = 1
+     !integer          :: asize(1)
+     !asize(1)=size(A)
+#ifdef MAGMA
+    ! call magmaf_cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
+    !    if(ngpu==1) then
+    !      call magmaf_cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
+    !    else
+    !       write(6,'(*(g0,1x))') 'ngpu>1 is not allowed in cheev but',ngpu
+    !      !call magmaf_cheev_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
+    !    end if
+#else
+    call cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork,info )
+#endif
+  end subroutine
+
+  subroutine glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork,info )
+    character        :: jobz  ! 'V' or 'N'
+    character        :: uplo  ! 'L' or 'U'
+    integer          :: n
+    complex(8)       :: A(lda,n)  ! Hermite matrix -> eigenvector
+    integer          :: lda
+    real(8)          :: w(*)      ! eigenvalue
+    complex(8)       :: work(*)
+    integer          :: lwork
+    real(8)          :: rwork(*)
+    integer          :: lrwork
+    !integer          :: iwork(*)
+    !integer          :: liwork
+    integer          :: info
+    integer          :: ngpu = 1
+         !integer          :: asize(1)
+         !asize(1)=size(A)
+#ifdef MAGMA
+    ! call magmaf_zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork,info )
+    !    if(ngpu==1) then
+    !      call magmaf_zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork,info )
+    !    else
+    !      call magmaf_zheev_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
+    !    end if
+#else
+    call zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
+#endif
+  end subroutine
+
+
+  subroutine glapack_ssyevd( jobz, uplo, n, A, lda, w, work, lwork,iwork, liwork, info )
     character        :: jobz
     character        :: uplo
     integer          :: n
@@ -1136,16 +1253,43 @@ contains
       !asize(1)=size(A)
 #ifdef MAGMA
     if(ngpu==1) then
-      call magmaf_ssyev( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+      call magmaf_ssyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
     else
-      call magmaf_ssyev_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+      call magmaf_ssyevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
     end if
 #else
-    call ssyev( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    call ssyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
 #endif
   end subroutine
 
-  subroutine glapack_cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+  subroutine glapack_dsyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork,  info )
+    character        :: jobz  ! 'V' or 'N'
+    character        :: uplo  ! 'L' or 'U'
+    integer          :: n
+    real(8)          :: A(lda,n)  ! real symmetric matrix -> eigenvector
+    integer          :: lda
+    real(8)          :: w(*)      ! eigenvalue
+    real (8)         :: work(*)
+    integer          :: lwork
+    integer          :: iwork(*)
+    integer          :: liwork
+    integer          :: info
+    integer          :: ngpu = 1
+    !integer          :: asize(1)
+    !asize(1)=size(A)
+#ifdef MAGMA
+    if(ngpu==1) then
+      call magmaf_dsyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    else
+      call magmaf_dsyevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    end if
+#else
+    call dsyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
+    liwork=1
+#endif
+  end subroutine
+
+  subroutine glapack_cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork,  info )
     character        :: jobz
     character        :: uplo
     integer          :: n
@@ -1164,39 +1308,12 @@ contains
       !asize(1)=size(A)
 #ifdef MAGMA
     if(ngpu==1) then
-      call magmaf_cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+      call magmaf_cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork,  info )
     else
       call magmaf_cheevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     end if
 #else
-    call cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
-#endif
-  end subroutine
-
-  subroutine glapack_dsyev( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
-    character        :: jobz  ! 'V' or 'N'
-    character        :: uplo  ! 'L' or 'U'
-    integer          :: n
-    real(8)          :: A(lda,n)  ! real symmetric matrix -> eigenvector
-    integer          :: lda
-    real(8)          :: w(*)      ! eigenvalue
-    real (8)         :: work(*)
-    integer          :: lwork
-    integer          :: iwork(*)
-    integer          :: liwork
-    integer          :: info
-    integer          :: ngpu = 1
-    !integer          :: asize(1)
-    !asize(1)=size(A)
-#ifdef MAGMA
-    if(ngpu==1) then
-      call magmaf_dsyev( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
-    else
-      call magmaf_dsyev_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
-    end if
-#else
-    call dsyev( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
-    liwork=1
+    call cheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork,iwork, liwork, info )
 #endif
   end subroutine
 
@@ -1224,7 +1341,7 @@ contains
       call magmaf_zheevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
     end if
 #else
-    call zheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+    call zheevd( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork,liwork, info )
 #endif
   end subroutine
 
@@ -1916,40 +2033,40 @@ contains
     liwork=5*n
   end subroutine
 
-  subroutine glapack_cheevx_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
-    integer :: ngpu
-    character :: jobz
-    character :: range
-    character :: uplo
-    integer :: n
-    complex :: A(lda,*)
-    integer :: lda
-    real :: vl,vu
-    integer :: il,iu
-    real :: abstol
-    integer,allocatable :: m(:)
-    real,allocatable :: w(:)
-    complex,allocatable :: z(:,:)
-    integer,parameter :: ldz=1
-    complex :: work(1)
-    integer :: lwork
-    real :: rwork(1)
-    integer :: lrwork
-    integer :: iwork(1)
-    integer :: liwork
-    integer :: ifail(1)
-    integer :: info
-    allocate(w(n),m(n))
-    allocate(z(1,1))
-    !integer :: jobzt,ranget,uplot
-    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
-#ifdef MAGMA
-    call magmaf_cheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
-#endif
-    lwork=real(work(1))
-    lrwork=7*n
-    liwork=5*n
-  end subroutine
+  !   subroutine glapack_cheevx_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  !     integer :: ngpu
+  !     character :: jobz
+  !     character :: range
+  !     character :: uplo
+  !     integer :: n
+  !     complex :: A(lda,*)
+  !     integer :: lda
+  !     real :: vl,vu
+  !     integer :: il,iu
+  !     real :: abstol
+  !     integer,allocatable :: m(:)
+  !     real,allocatable :: w(:)
+  !     complex,allocatable :: z(:,:)
+  !     integer,parameter :: ldz=1
+  !     complex :: work(1)
+  !     integer :: lwork
+  !     real :: rwork(1)
+  !     integer :: lrwork
+  !     integer :: iwork(1)
+  !     integer :: liwork
+  !     integer :: ifail(1)
+  !     integer :: info
+  !     allocate(w(n),m(n))
+  !     allocate(z(1,1))
+  !     !integer :: jobzt,ranget,uplot
+  !     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+  !#ifdef MAGMA
+  !     call magmaf_cheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+  !#endif
+  !     lwork=real(work(1))
+  !     lrwork=7*n
+  !     liwork=5*n
+  !   end subroutine
 
   subroutine glapack_zheevx_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
     character :: jobz
@@ -1987,73 +2104,113 @@ contains
     liwork=5*n
   end subroutine
 
-  subroutine glapack_zheevx_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  !  subroutine glapack_zheevx_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  !    integer :: ngpu
+  !    character :: jobz
+  !    character :: range
+  !    character :: uplo
+  !    integer :: n
+  !    complex(8) :: A(lda,*)
+  !    integer :: lda
+  !    real(8) :: vl,vu
+  !    integer :: il,iu
+  !    integer,allocatable :: m(:)
+  !    real(8),allocatable :: w(:)
+  !    complex(8),allocatable :: z(:,:)
+  !    integer,parameter :: ldz=1
+  !    complex(8) :: work(1)
+  !    integer :: lwork
+  !    real(8) :: rwork(1)
+  !    integer :: lrwork
+  !    integer :: iwork(1)
+  !    integer :: liwork
+  !    integer :: ifail
+  !    integer :: info
+  !    allocate(w(n),m(n))
+  !    !integer :: jobzt,ranget,uplot
+  !    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+  !#ifdef MAGMA
+  !    call magmaf_zheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
+  !#endif
+  !    lwork=real(work(1))
+  !    lrwork=7*n
+  !    liwork=5*n
+  !  end subroutine
+
+  subroutine glapack_cheevdx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex :: A(lda,*)
+    integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    integer :: liwork
+    integer :: info
+
+    real :: vl,vu
+    integer :: il,iu
+    real :: abstol
+    integer,allocatable :: m(:)   ! number of eigenvalues found
+    real,allocatable :: w(:)
+    complex :: work(1)
+    real :: rwork(1)
+    integer :: iwork(1)
+    integer :: ifail(1)
+    allocate(w(n),m(n))
+    !integer :: jobzt,ranget,uplot
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+#ifdef MAGMA
+    call magmaf_cheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    lrwork=rwork(1)
+    liwork=iwork(1)
+#else
+
+#endif
+    lwork=real(work(1))
+
+  end subroutine
+
+  subroutine glapack_cheevdx_2stage_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
     integer :: ngpu
     character :: jobz
     character :: range
     character :: uplo
     integer :: n
-    complex(8) :: A(lda,*)
+    complex :: A(lda,*)
     integer :: lda
-    real(8) :: vl,vu
-    integer :: il,iu
-    integer,allocatable :: m(:)
-    real(8),allocatable :: w(:)
-    complex(8),allocatable :: z(:,:)
-    integer,parameter :: ldz=1
-    complex(8) :: work(1)
     integer :: lwork
-    real(8) :: rwork(1)
     integer :: lrwork
-    integer :: iwork(1)
     integer :: liwork
-    integer :: ifail
     integer :: info
+
+    real :: vl,vu
+    integer :: il,iu
+    real :: abstol
+    integer,allocatable :: m(:)   ! number of eigenvalues found
+    real,allocatable :: w(:)
+    complex :: work(1)
+    real :: rwork(1)
+    integer :: iwork(1)
+    integer :: ifail(1)
+
     allocate(w(n),m(n))
     !integer :: jobzt,ranget,uplot
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
 #ifdef MAGMA
-    call magmaf_zheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
+    call magmaf_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    lrwork=rwork(1)
+    liwork=iwork(1)
+#else
+    !call cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+    !lrwork=7*n
+    !liwork=5*n
 #endif
     lwork=real(work(1))
-    lrwork=7*n
-    liwork=5*n
   end subroutine
 
   subroutine glapack_cheevx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
-    character :: jobz
-    character :: range
-    character :: uplo
-    integer :: n
-    complex :: A(lda,*)
-    integer :: lda
-    real :: vl,vu
-    integer :: il,iu
-    real :: abstol
-    integer,allocatable :: m(:)   ! number of eigenvalues found
-    real,allocatable :: w(:)
-    complex :: work(1)
-    integer :: lwork
-    real :: rwork(1)
-    integer :: lrwork
-    integer :: iwork(1)
-    integer :: liwork
-    integer :: ifail(1)
-    integer :: info
-    allocate(w(n),m(n))
-    !integer :: jobzt,ranget,uplot
-    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
-#ifdef MAGMA
-    call magmaf_cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
-#else
-    call cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
-#endif
-    lwork=real(work(1))
-    lrwork=7*n
-    liwork=5*n
-  end subroutine
-
-  subroutine glapack_cheevx_2stage_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
     integer :: ngpu
     character :: jobz
     character :: range
@@ -2061,64 +2218,73 @@ contains
     integer :: n
     complex :: A(lda,*)
     integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    integer :: liwork
+    integer :: info
+
     real :: vl,vu
     integer :: il,iu
     real :: abstol
     integer,allocatable :: m(:)   ! number of eigenvalues found
     real,allocatable :: w(:)
     complex :: work(1)
-    integer :: lwork
     real :: rwork(1)
-    integer :: lrwork
     integer :: iwork(1)
-    integer :: liwork
     integer :: ifail(1)
-    integer :: info
+
     allocate(w(n),m(n))
     !integer :: jobzt,ranget,uplot
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
 #ifdef MAGMA
-    call magmaf_cheevx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
-#endif
-    lwork=real(work(1))
+    !    call magmaf_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,liwork,info)
+    !    lrwork=rwork(1)
+    !    liwork=iwork(1)
+#else
+    call cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
     lrwork=7*n
     liwork=5*n
+#endif
+    lwork=real(work(1))
   end subroutine
 
-  subroutine glapack_zheevx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  subroutine glapack_zheevdx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
     character :: jobz
     character :: range
     character :: uplo
     integer :: n
     complex(8) :: A(lda,*)
     integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    integer :: liwork
+    integer :: info
     real(8) :: vl,vu
     integer :: il,iu
     real(8) :: abstol
     integer,allocatable :: m(:)   ! number of eigenvalues found
     real(8),allocatable :: w(:)
     complex(8) :: work(1)
-    integer :: lwork
     real(8) :: rwork(1)
-    integer :: lrwork
     integer :: iwork(1)
-    integer :: liwork
     integer :: ifail(1)
-    integer :: info
+
     !integer :: jobzt,ranget,uplot
     allocate(w(n),m(n))
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
 #ifdef MAGMA
-    call magmaf_zheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+    call magmaf_zheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    lrwork=rwork(1)
+    liwork=iwork(1)
 #else
-    call zheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+    !    call zheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+    !    lrwork=7*n
+    !    liwork=5*n
 #endif
     lwork=real(work(1))
-    lrwork=7*n
-    liwork=5*n
   end subroutine
 
-  subroutine glapack_zheevx_2stage_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  subroutine glapack_zheevx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
     integer :: ngpu
     character :: jobz
     character :: range
@@ -2126,28 +2292,74 @@ contains
     integer :: n
     complex(8) :: A(lda,*)
     integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    integer :: liwork
+    integer :: info
+
     real(8) :: vl,vu
     integer :: il,iu
     real(8) :: abstol
     integer,allocatable :: m(:)   ! number of eigenvalues found
     real(8),allocatable :: w(:)   ! eigenvalues
     complex(8) :: work(1)
-    integer :: lwork
     real(8) :: rwork(1)
-    integer :: lrwork
     integer :: iwork(1)
-    integer :: liwork
     integer :: ifail(1)
-    integer :: info
+
     !integer :: jobzt,ranget,uplot
     allocate(w(n),m(n))
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
 #ifdef MAGMA
-    call magmaf_zheevx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+    !call magmaf_zheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+#else
+    call zheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+    lrwork=7*n
+    liwork=5*n
 #endif
     lwork=real(work(1))
     lrwork=7*n
     liwork=5*n
+  end subroutine
+
+  subroutine glapack_zheevdx_2stage_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+    integer :: ngpu
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex(8) :: A(lda,*)
+    integer :: lda
+    integer :: lwork
+    integer :: lrwork
+    integer :: liwork
+    integer :: info
+
+    real(8) :: vl,vu
+    integer :: il,iu
+    real(8) :: abstol
+    integer,allocatable :: m(:)   ! number of eigenvalues found
+    real(8),allocatable :: w(:)   ! eigenvalues
+    complex(8) :: work(1)
+    real(8) :: rwork(1)
+    integer :: iwork(1)
+    integer :: ifail(1)
+
+    !integer :: jobzt,ranget,uplot
+    allocate(w(n),m(n))
+    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+#ifdef MAGMA
+    call magmaf_zheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+    lrwork=rwork(1)
+    liwork=iwork(1)
+#else
+    !call zheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+    !lrwork=7*n
+    !liwork=5*n
+#endif
+    lwork=real(work(1))
+    !lrwork=7*n
+    !liwork=5*n
   end subroutine
 
   subroutine glapack_cheevx(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,z,ldz,w,work,lwork,rwork,iwork,ifail,info)
@@ -2206,8 +2418,63 @@ contains
 #endif
   end subroutine
 
-  subroutine glapack_cheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
-    integer :: ngpu
+  !  subroutine glapack_cheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+  !    integer :: ngpu
+  !    character :: jobz
+  !    character :: range
+  !    character :: uplo
+  !    integer :: n
+  !    complex :: A(lda,*)
+  !    integer :: lda
+  !    real :: vl,vu
+  !    integer :: il,iu
+  !    real :: abstol
+  !    integer :: m(*)
+  !    real :: w(*)
+  !    complex,allocatable :: z(:,:)
+  !    integer,parameter :: ldz=1
+  !    complex :: work(*)
+  !    integer :: lwork
+  !    real :: rwork(*)
+  !    integer :: lrwork
+  !    integer :: iwork(*)
+  !    integer :: ifail(*)
+  !    integer :: info
+  !    allocate(z(1,1))
+  !#ifdef MAGMA
+  !    call magmaf_cheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
+  !#endif
+  !  end subroutine
+
+  !  subroutine glapack_zheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+  !    integer :: ngpu
+  !    character :: jobz
+  !    character :: range
+  !    character :: uplo
+  !    integer :: n
+  !    complex(8) :: A(lda,*)
+  !    integer :: lda
+  !    real(8) :: vl,vu
+  !    integer :: il,iu
+  !    real(8) :: abstol
+  !    integer :: m(*)
+  !    real(8) :: w(*)
+  !    complex(8),allocatable :: z(:,:)
+  !    integer,parameter :: ldz=1
+  !    complex(8) :: work(*)
+  !    integer :: lwork
+  !    real(8) :: rwork(*)
+  !    integer :: lrwork
+  !    integer :: iwork(*)
+  !    integer :: ifail(*)
+  !    integer :: info
+  !    allocate(z(1,1))
+  !#ifdef MAGMA
+  !    call magmaf_zheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
+  !#endif
+  !  end subroutine
+
+  subroutine glapack_cheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
     character :: jobz
     character :: range
     character :: uplo
@@ -2217,52 +2484,26 @@ contains
     real :: vl,vu
     integer :: il,iu
     real :: abstol
-    integer :: m(*)
-    real :: w(*)
-    complex,allocatable :: z(:,:)
-    integer,parameter :: ldz=1
+    integer :: m(*)   ! number of eigenvalues found
+    real :: w(*) ! eigenvalues
+    !complex :: z(ldz,*)
+    !integer:: ldz
     complex :: work(*)
     integer :: lwork
     real :: rwork(*)
     integer :: lrwork
     integer :: iwork(*)
-    integer :: ifail(*)
+    integer :: liwork
+    !integer :: ifail(*)
     integer :: info
-    allocate(z(1,1))
 #ifdef MAGMA
-    call magmaf_cheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
+    call magmaf_cheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+#else
+    !call cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,z,ldz,w,work,lwork,rwork,iwork,ifail,info)
 #endif
   end subroutine
 
-  subroutine glapack_zheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
-    integer :: ngpu
-    character :: jobz
-    character :: range
-    character :: uplo
-    integer :: n
-    complex(8) :: A(lda,*)
-    integer :: lda
-    real(8) :: vl,vu
-    integer :: il,iu
-    real(8) :: abstol
-    integer :: m(*)
-    real(8) :: w(*)
-    complex(8),allocatable :: z(:,:)
-    integer,parameter :: ldz=1
-    complex(8) :: work(*)
-    integer :: lwork
-    real(8) :: rwork(*)
-    integer :: lrwork
-    integer :: iwork(*)
-    integer :: ifail(*)
-    integer :: info
-    allocate(z(1,1))
-#ifdef MAGMA
-    call magmaf_zheevx_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
-#endif
-  end subroutine
-
-  subroutine glapack_cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
+  subroutine glapack_cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
     character :: jobz
     character :: range
     character :: uplo
@@ -2271,7 +2512,7 @@ contains
     integer :: lda
     real :: vl,vu
     integer :: il,iu
-    real :: abstol
+    !real :: abstol
     integer :: m(*)   ! number of eigenvalues found
     real :: w(*) ! eigenvalues
     complex :: z(ldz,*)
@@ -2284,9 +2525,38 @@ contains
     integer :: ifail(*)
     integer :: info
 #ifdef MAGMA
-    call magmaf_cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+    !call magmaf_cheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,iwork,ifail,info)
 #else
     call cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,z,ldz,w,work,lwork,rwork,iwork,ifail,info)
+#endif
+  end subroutine
+
+  subroutine glapack_zheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,z,ldz,work,lwork,rwork,iwork,liwork,info)
+    character :: jobz
+    character :: range
+    character :: uplo
+    integer :: n
+    complex(8) :: A(lda,*)
+    integer :: lda
+    real(8) :: vl,vu
+    integer :: il,iu
+    !real(8) :: abstol
+    integer :: m(*)   ! number of eigenvalues found
+    real(8) :: w(*) ! eigenvalues
+    complex(8) :: z(ldz,*)
+    integer:: ldz
+    complex(8) :: work(*)
+    integer :: lwork
+    real(8) :: rwork(*)
+    integer :: lrwork
+    integer :: iwork(*)
+    integer :: liwork
+    !integer :: ifail(*)
+    integer :: info
+#ifdef MAGMA
+    call magmaf_zheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
+#else
+    !call zheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
 #endif
   end subroutine
 
@@ -2312,13 +2582,13 @@ contains
     integer :: ifail(*)
     integer :: info
 #ifdef MAGMA
-    call magmaf_zheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,abstol,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
+    !call magmaf_zheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
 #else
     call zheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
 #endif
   end subroutine
 
-  subroutine glapack_cheevx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
+  subroutine glapack_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,z,ldz,work,lwork,rwork,iwork,liwork,info)
     integer :: ngpu
     character :: jobz
     character :: range
@@ -2338,15 +2608,16 @@ contains
     real :: rwork(*)
     integer :: lrwork
     integer :: iwork(*)
-    integer :: ifail(*)
+    integer :: liwork
+    !integer :: ifail(*)
     integer :: info
     integer :: jobzt,ranget,uplot
 #ifdef MAGMA
-    call magmaf_cheevx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
+    call magmaf_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
 #endif
   end subroutine
 
-  subroutine glapack_zheevx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+  subroutine glapack_zheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,iwork,liwork,info)
     integer :: ngpu
     character :: jobz
     character :: range
@@ -2364,11 +2635,12 @@ contains
     real(8) :: rwork(*)
     integer :: lrwork
     integer :: iwork(*)
-    integer :: ifail(*)
+    integer :: liwork
+    !integer :: ifail(*)
     integer :: info
     integer :: jobzt,ranget,uplot
 #ifdef MAGMA
-    call magmaf_zheevx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+    call magmaf_zheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
 #endif
   end subroutine
 
@@ -2533,3 +2805,187 @@ end module
     !            stop
     !        end if
     !    end subroutine
+
+      !  subroutine glapack_cheevx_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
+  !    character       :: jobz
+  !    character       :: uplo
+  !    integer :: n
+  !    complex,target:: A(lda,n)
+  !    integer :: lda
+  !    integer :: lwork
+  !    integer :: lrwork
+  !    integer :: liwork
+  !    complex:: work(1)  !complex,allocatable:: work(:)
+  !    real:: rwork(1)    !real,allocatable:: rwork(:)
+  !    real,allocatable :: w(:) !real,allocatable:: w(:)
+  !    integer:: iwork(1) !integer,allocatable :: iwork(:)
+  !    integer :: info
+  !    allocate(w(n))
+  !    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+  !    ! calculate work array size used in ev
+  !    call glapack_cheevx( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
+  !    if(info/=0) then
+  !      write(6,*) 'info in glapack cheevx ',info; stop
+  !    end if
+  !    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
+  !    lwork=max(1,lwork)
+  !    lrwork=max(1,lrwork)
+  !    liwork=max(1,liwork)
+  !    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
+  !  end subroutine
+
+  !  subroutine glapack_zheevx_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
+  !    character       :: jobz
+  !    character       :: uplo
+  !    integer :: n
+  !    complex(8),target:: A(lda,n)
+  !    integer :: lda
+  !    integer :: lwork
+  !    integer :: lrwork
+  !    integer :: liwork
+  !    complex(8) :: work(1)  !complex(8),allocatable:: work(:)
+  !    real(8):: rwork(1)    !real(8),allocatable:: rwork(:)
+  !    real(8),allocatable :: w(:)  !real(8),allocatable:: w(:)
+  !    integer:: iwork(1)    !integer,allocatable :: iwork(:)
+  !    integer :: info
+  !    allocate(w(n))
+  !    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+  !    ! calculate work array size used in ev
+  !    call glapack_zheevx( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
+  !    if(info/=0) then
+  !      write(6,*) 'info in glapack zheevx ',info; stop
+  !    end if
+  !    lwork = int(work(1)); lrwork=int(rwork(1)); liwork=iwork(1)  ! added
+  !    lwork=max(1,lwork)
+  !    lrwork=max(1,lrwork)
+  !    liwork=max(1,liwork)
+  !    !print *,'lwork=',lwork,' liwork=',liwork; stop  ! for test
+  !  end subroutine
+
+  !  ! this estimate waork array size lwork, liwork
+  !  subroutine glapack_gev_prm(jobz,uplo,n,A,lda,lwork,lrwork,liwork)
+  !    character       :: jobz
+  !    character       :: uplo
+  !    integer :: n
+  !    class(*),target:: A(lda,n)
+  !    integer :: lda
+  !    integer :: lwork
+  !    integer :: lrwork
+  !    integer :: liwork
+  !  !integer :: lwmax
+  !    integer:: iwork(1)
+  !    !real:: rtmp(1)
+  !    class(*),allocatable:: work(:)
+  !    class(*),allocatable:: rwork(:)
+  !    class(*),allocatable:: w(:)
+  !    integer :: info
+  !            !allocate(work(1),rwork(1),w(1))
+  !    select type (A)
+  !      type is (real)
+  !      allocate(real::work(1),rwork(1),w(1))
+  !      type is (real(8))
+  !      allocate(real(8)::work(1),rwork(1),w(1))
+  !      type is (complex)
+  !      allocate(complex::work(1))
+  !      allocate(real::rwork(1),w(1))
+  !      type is (complex(8))
+  !      allocate(complex(8)::work(1))
+  !      allocate(real(8)::rwork(1),w(1))
+  !    end select
+  !    lwork  = -1
+  !    lrwork = -1
+  !    liwork = -1
+  !    !lrwork=1
+  !    ! calculate work array size used in ev
+  !    call glapack_gev( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork, liwork, info )
+  !    if(info/=0) call wt_info('magmaf_ssyevx',info)
+  !    select type (work)
+  !      type is (real)
+  !      lwork = work(1)
+  !      type is (real(8))
+  !      lwork = work(1)
+  !      type is (complex)
+  !      lwork = work(1)
+  !      type is (complex(8))
+  !      lwork = work(1)
+  !    end select
+  !    select type (rwork)
+  !      type is (real)
+  !      lrwork=rwork(1)
+  !      type is (real(8))
+  !      lrwork=rwork(1)
+  !    end select
+  !    liwork = iwork(1)
+  !    lwork=max(1,lwork)
+  !    lrwork=max(1,lrwork)
+  !    liwork=max(1,liwork)
+  !    !lworkt =1 + 6*nb + 2*nb**2
+  !    !lwork = max(lwork,lworkt)    ! for strange lwork
+  !    !write(6,'(a,4i15)') 'n,lwork,lrwork,liwork in glapack=',n,lwork,lrwork,liwork  ! for test
+  !    if(info/=0) then
+  !      write(6,'(a,3i10)') 'cannt estimate lapack_param, lwork,lrwork,liwork=',lwork,lrwork,liwork
+  !      stop
+  !    end if
+  !  end subroutine
+
+  !  ! calculate work array size
+  !  subroutine glapack_gev( jobz, uplo, n, A, lda, w, work, lwork, rwork, lrwork, iwork, liwork, info )
+  !    character        :: jobz
+  !    character        :: uplo
+  !    integer          :: n
+  !    class(*),target:: A(lda,n)
+  !    integer          :: lda
+  !    ! use work array in this module
+  !    class(*),target:: w(n)  !w(:)          ! real or real(8)
+  !    class(*),target:: work(lwork)   !work(*)
+  !    integer          :: lwork
+  !    class(*),target:: rwork(lrwork)   ! only for complex
+  !    integer          ::  lrwork       ! only for complex
+  !    integer          :: iwork(liwork)
+  !    integer          :: liwork
+  !    integer          :: info
+  !
+  !    real,pointer:: sap(:,:),sworkp(:)
+  !    real(8),pointer:: dap(:,:),dworkp(:)
+  !    complex,pointer:: cap(:,:),cworkp(:)
+  !    complex(8),pointer:: zap(:,:),zworkp(:)
+  !    real,pointer:: swp(:)
+  !    real(8),pointer:: dwp(:)
+  !    real,pointer::srworkp(:)
+  !    real(8),pointer::drworkp(:)
+  !
+  !    call glapack_set_class2dp(A,lda,n,sap,dap,cap,zap)
+  !    call glapack_set_class1dp(work,1,sworkp,dworkp,cworkp,zworkp)
+  !    call glapack_set_class1drp(w,1,swp,dwp)
+  !    call glapack_set_class1drp(rwork,1,srworkp,drworkp)
+  !
+  !    select type (A)
+  !      type is (real)
+  !      !if(same_type_as(A,W).and.same_type_as(A,work)) then
+  !      !    call glapack_zungqr( m, n, k, A, lda, tau, dt, nb, info )
+  !      !end if
+  !      call glapack_ssyev( jobz, uplo, n, sAp, lda, sWp, sworkp, lwork, iwork, liwork, info )
+  !      type is (real(8))
+  !      !if(same_type_as(A,W).and.same_type_as(A,work)) then
+  !      !    call glapack_dsyev( jobz, uplo, n, A, lda, W, work, lwork, iwork, liwork, info )
+  !      !end if
+  !      call glapack_dsyev( jobz, uplo, n, dAp, lda, dWp, dworkp, lwork, iwork, liwork, info )
+  !      type is (complex)
+  !      !if(same_type_as(A,W).and.same_type_as(A,work)) then
+  !      !    select type (rwork)
+  !      !        type is (real)
+  !      !        call glapack_cheev( jobz, uplo, n, A, lda, W, work, lwork, rwork, lrwork, iwork, liwork, info )
+  !      !    end select
+  !      call glapack_cheev( jobz, uplo, n, cAp, lda, sWp, cworkp, lwork, srworkp, lrwork, iwork, liwork, info )
+  !      !end if
+  !      type is (complex(8))
+  !      !if(same_type_as(A,W).and.same_type_as(A,work)) then
+  !      !    select type (rwork)
+  !      !        type is (real(8))
+  !      !        call glapack_zheev( jobz, uplo, n, A, lda, W, work, lwork, rwork, lrwork, iwork, liwork, info )
+  !      !    end select
+  !      call glapack_zheev( jobz, uplo, n, zAp, lda, dWp, zworkp, lwork, drworkp, lrwork, iwork, liwork, info )
+  !        !end if
+  !    end select
+  !  end subroutine
+
