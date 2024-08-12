@@ -20,7 +20,6 @@
 module glapack
 #ifdef MAGMA
   use magma
-  !use magma2
   use cublasXt
 #endif
   implicit none
@@ -916,7 +915,7 @@ contains
     ! calculate work array size used in ev
     call glapack_ssyev( jobz, uplo, n, A, lda, w, work, lwork,info )
     if(info/=0) then
-      write(6,*) 'info in glapack_ssyev ',info; stop
+      write(6,*) 'info in glapack_ssyev_prm ',info; stop
     end if 
     lwork = int(work(1))
     !liwork=iwork(1)  ! added
@@ -973,9 +972,9 @@ contains
     lwork  = -1; lrwork=-1  ! calculate work array size
     ! calculate work array size used in ev
     call glapack_cheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
-    if(info/=0) then
-      write(6,*) 'info in glapack_ssyev ',info; stop
-    end if
+    !if(info/=0) then
+    !  write(6,*) 'info in glapack_cheev_prm ',info; stop
+    !end if
     lwork = int(work(1))
     lwork=max(1,lwork)
     lrwork=max(1,3*n-2)
@@ -1000,9 +999,9 @@ contains
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
     ! calculate work array size used in ev
     call glapack_zheev( jobz, uplo, n, A, lda, w, work, lwork, rwork, info )
-    if(info/=0) then
-      write(6,*) 'info in glapack_ssyev ',info; stop
-    end if
+    !if(info/=0) then
+    !  write(6,*) 'info in glapack_zheev_prm ',info; stop
+    !end if
     lwork = int(work(1)); liwork=iwork(1)  ! added
     lwork=max(1,lwork)
     lrwork=max(1,3*n-2)
@@ -1029,7 +1028,7 @@ contains
     ! calculate work array size used in ev
     call glapack_ssyevd( jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork, info )
     if(info/=0) then
-      write(6,*) 'info in glapack_ssyev ',info; stop
+      write(6,*) 'info in glapack_ssyevd_prm ',info; stop
     end if
     lwork = int(work(1));
     liwork=1
@@ -1085,7 +1084,7 @@ contains
     ! calculate work array size used in ev
     call glapack_cheevd( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
     if(info/=0) then
-      write(6,*) 'info in glapack_ssyev ',info; stop
+      write(6,*) 'info in glapack_cheevd_prm ',info; stop
     end if
     lwork = int(real(work(1)))
     lrwork= int(rwork(1))
@@ -1112,7 +1111,7 @@ contains
     ! calculate work array size used in ev
     call glapack_zheevd( jobz, uplo, n, A, lda, w, work, lwork,rwork,lrwork,iwork,liwork,info )
     if(info/=0) then
-      write(6,*) 'info in glapack_ssyev ',info; stop
+      write(6,*) 'info in glapack_zheevd_prm ',info; stop
     end if
     lwork = int(work(1))
     lrwork=int(rwork(1))
@@ -1997,7 +1996,7 @@ contains
     end if
   end subroutine
 
-  subroutine glapack_cheevx_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  subroutine glapack_cheevx_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork)
     character :: jobz
     character :: range
     character :: uplo
@@ -2068,7 +2067,7 @@ contains
   !     liwork=5*n
   !   end subroutine
 
-  subroutine glapack_zheevx_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  subroutine glapack_zheevx_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork)
     character :: jobz
     character :: range
     character :: uplo
@@ -2137,7 +2136,7 @@ contains
   !    liwork=5*n
   !  end subroutine
 
-  subroutine glapack_cheevdx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  subroutine glapack_cheevdx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork)
     character :: jobz
     character :: range
     character :: uplo
@@ -2147,7 +2146,6 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    integer :: info
 
     real :: vl,vu
     integer :: il,iu
@@ -2158,6 +2156,7 @@ contains
     real :: rwork(1)
     integer :: iwork(1)
     integer :: ifail(1)
+    integer :: info
     allocate(w(n),m(n))
     !integer :: jobzt,ranget,uplot
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
@@ -2172,7 +2171,7 @@ contains
 
   end subroutine
 
-  subroutine glapack_cheevdx_2stage_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  subroutine glapack_cheevdx_2stage_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork)
     integer :: ngpu
     character :: jobz
     character :: range
@@ -2183,7 +2182,6 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    integer :: info
 
     real :: vl,vu
     integer :: il,iu
@@ -2194,6 +2192,7 @@ contains
     real :: rwork(1)
     integer :: iwork(1)
     integer :: ifail(1)
+    integer :: info
 
     allocate(w(n),m(n))
     !integer :: jobzt,ranget,uplot
@@ -2210,7 +2209,7 @@ contains
     lwork=real(work(1))
   end subroutine
 
-  subroutine glapack_cheevx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  subroutine glapack_cheevx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork)
     integer :: ngpu
     character :: jobz
     character :: range
@@ -2221,19 +2220,23 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    integer :: info
 
     real :: vl,vu
     integer :: il,iu
     real :: abstol
     integer,allocatable :: m(:)   ! number of eigenvalues found
+    real,allocatable :: z(:,:)
+    integer :: ldz
     real,allocatable :: w(:)
     complex :: work(1)
     real :: rwork(1)
     integer :: iwork(1)
     integer :: ifail(1)
+    integer :: info
 
     allocate(w(n),m(n))
+    allocate(z(1,1))
+    ldz=1
     !integer :: jobzt,ranget,uplot
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
 #ifdef MAGMA
@@ -2241,14 +2244,14 @@ contains
     !    lrwork=rwork(1)
     !    liwork=iwork(1)
 #else
-    call cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+    call cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
     lrwork=7*n
     liwork=5*n
 #endif
     lwork=real(work(1))
   end subroutine
 
-  subroutine glapack_zheevdx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  subroutine glapack_zheevdx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork)
     character :: jobz
     character :: range
     character :: uplo
@@ -2258,7 +2261,7 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    integer :: info
+
     real(8) :: vl,vu
     integer :: il,iu
     real(8) :: abstol
@@ -2268,6 +2271,7 @@ contains
     real(8) :: rwork(1)
     integer :: iwork(1)
     integer :: ifail(1)
+    integer :: info
 
     !integer :: jobzt,ranget,uplot
     allocate(w(n),m(n))
@@ -2284,7 +2288,7 @@ contains
     lwork=real(work(1))
   end subroutine
 
-  subroutine glapack_zheevx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  subroutine glapack_zheevx_2stage_prm(jobz,range,uplo,n,A,lda,lwork,lrwork,liwork)
     integer :: ngpu
     character :: jobz
     character :: range
@@ -2295,25 +2299,30 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    integer :: info
 
     real(8) :: vl,vu
     integer :: il,iu
     real(8) :: abstol
     integer,allocatable :: m(:)   ! number of eigenvalues found
+    real(8),allocatable :: z(:,:)
+    integer :: ldz
     real(8),allocatable :: w(:)   ! eigenvalues
     complex(8) :: work(1)
     real(8) :: rwork(1)
     integer :: iwork(1)
     integer :: ifail(1)
+    integer :: info
 
     !integer :: jobzt,ranget,uplot
     allocate(w(n),m(n))
+    allocate(z(1,1))
+    ldz=1
     lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
 #ifdef MAGMA
     !call magmaf_zheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
 #else
-    call zheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
+
+    call zheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
     lrwork=7*n
     liwork=5*n
 #endif
@@ -2322,7 +2331,7 @@ contains
     liwork=5*n
   end subroutine
 
-  subroutine glapack_zheevdx_2stage_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork,info)
+  subroutine glapack_zheevdx_2stage_m_prm(ngpu,jobz,range,uplo,n,A,lda,lwork,lrwork,liwork)
     integer :: ngpu
     character :: jobz
     character :: range
@@ -2333,7 +2342,6 @@ contains
     integer :: lwork
     integer :: lrwork
     integer :: liwork
-    integer :: info
 
     real(8) :: vl,vu
     integer :: il,iu
@@ -2344,6 +2352,7 @@ contains
     real(8) :: rwork(1)
     integer :: iwork(1)
     integer :: ifail(1)
+    integer :: info
 
     !integer :: jobzt,ranget,uplot
     allocate(w(n),m(n))
@@ -2503,7 +2512,7 @@ contains
 #endif
   end subroutine
 
-  subroutine glapack_cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
+  subroutine glapack_cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
     character :: jobz
     character :: range
     character :: uplo
@@ -2512,7 +2521,7 @@ contains
     integer :: lda
     real :: vl,vu
     integer :: il,iu
-    !real :: abstol
+    real :: abstol
     integer :: m(*)   ! number of eigenvalues found
     real :: w(*) ! eigenvalues
     complex :: z(ldz,*)
@@ -2527,11 +2536,11 @@ contains
 #ifdef MAGMA
     !call magmaf_cheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,iwork,ifail,info)
 #else
-    call cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,z,ldz,w,work,lwork,rwork,iwork,ifail,info)
+    call cheevx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,z,ldz,work,lwork,rwork,iwork,ifail,info)
 #endif
   end subroutine
 
-  subroutine glapack_zheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,z,ldz,work,lwork,rwork,iwork,liwork,info)
+  subroutine glapack_zheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,iwork,liwork,info)
     character :: jobz
     character :: range
     character :: uplo
@@ -2543,8 +2552,8 @@ contains
     !real(8) :: abstol
     integer :: m(*)   ! number of eigenvalues found
     real(8) :: w(*) ! eigenvalues
-    complex(8) :: z(ldz,*)
-    integer:: ldz
+    !complex(8) :: z(ldz,*)
+    !integer:: ldz
     complex(8) :: work(*)
     integer :: lwork
     real(8) :: rwork(*)
@@ -2588,7 +2597,7 @@ contains
 #endif
   end subroutine
 
-  subroutine glapack_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,z,ldz,work,lwork,rwork,iwork,liwork,info)
+  subroutine glapack_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,iwork,liwork,info)
     integer :: ngpu
     character :: jobz
     character :: range
@@ -2601,8 +2610,8 @@ contains
     real :: abstol
     integer :: m(*)   ! number of eigenvalues found
     real :: w(*) ! eigenvalues
-    complex :: z(ldz,*)
-    integer:: ldz
+    !complex :: z(ldz,*)
+    !integer:: ldz
     complex :: work(*)
     integer :: lwork
     real :: rwork(*)
