@@ -2159,7 +2159,7 @@ contains
     integer :: info
     allocate(w(n),m(n))
     !integer :: jobzt,ranget,uplot
-    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    lwork  = -1; liwork=-1; lrwork=-1; il=1; iu=1; info=0  ! calculate work array size
 #ifdef MAGMA
     call magmaf_cheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
     lrwork=rwork(1)
@@ -2196,7 +2196,7 @@ contains
 
     allocate(w(n),m(n))
     !integer :: jobzt,ranget,uplot
-    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    lwork  = -1; liwork=-1; lrwork=-1; il=1; iu=1; info=0  ! calculate work array size
 #ifdef MAGMA
     call magmaf_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
     lrwork=rwork(1)
@@ -2238,7 +2238,7 @@ contains
     allocate(z(1,1))
     ldz=1
     !integer :: jobzt,ranget,uplot
-    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    lwork  = -1; liwork=-1; lrwork=-1; il=1; iu=1; info=0   ! calculate work array size
 #ifdef MAGMA
     !    call magmaf_cheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,liwork,info)
     !    lrwork=rwork(1)
@@ -2275,7 +2275,7 @@ contains
 
     !integer :: jobzt,ranget,uplot
     allocate(w(n),m(n))
-    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    lwork  = -1; liwork=-1; lrwork=-1; il=1; iu=1; info=0  ! calculate work array size
 #ifdef MAGMA
     call magmaf_zheevdx_2stage(jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
     lrwork=rwork(1)
@@ -2317,7 +2317,7 @@ contains
     allocate(w(n),m(n))
     allocate(z(1,1))
     ldz=1
-    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    lwork  = -1; liwork=-1; lrwork=-1; il=1; iu=1; info=0   ! calculate work array size
 #ifdef MAGMA
     !call magmaf_zheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,abstol,m,w,work,lwork,rwork,iwork,ifail,info)
 #else
@@ -2356,7 +2356,7 @@ contains
 
     !integer :: jobzt,ranget,uplot
     allocate(w(n),m(n))
-    lwork  = -1; liwork=-1; lrwork=-1  ! calculate work array size
+    lwork  = -1; liwork=-1; lrwork=-1; il=1; iu=1; info=0   ! calculate work array size
 #ifdef MAGMA
     call magmaf_zheevdx_2stage_m(ngpu,jobz,range,uplo,n,A,lda,vl,vu,il,iu,m,w,work,lwork,rwork,lrwork,iwork,liwork,info)
     lrwork=rwork(1)
