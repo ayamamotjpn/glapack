@@ -7,10 +7,10 @@ OBJD = obj_86
 JDIR = obj_86
 IDIR = -I$(JDIR)
 
-CUDA_VER = 12.0
-MKL_VER = 2023.1.0
-MAGMA_VER = 2.7.0
-NV_VER = 23.1
+CUDA_VER = 12.9
+MKL_VER = 2025.0
+MAGMA_VER = 2.8.0
+NV_VER = 25.7
 
 CUDAROOT = $(HOME)/local/cuda-$(CUDA_VER)
 CUDAHOME = $(CUDAROOT)/targets/x86_64-linux
@@ -28,18 +28,22 @@ MKLROOT = $(HOME)/app/oneapi/mkl/$(MKL_VER)
 PG =
 
 # chose fortran compiler
-F90 = ifort
+#F90 = ifort
+F90 = ifx
 #F90 = gfortran
 #F90 = pgf90
 #F90 = nvfortran
 
 # chose c compiler
 #CC = gcc
-CC = icc
+#CC = icc
+CC = icx
 #CC = pgcc
 #CC = nvcc
 
 ifeq ($(F90),ifort)
+  INSD = intel
+else ifeq ($(F90),ifx)
   INSD = intel
 else ifeq ($(F90),gfortran)
   INSD = gnu
@@ -56,6 +60,14 @@ GSL = $(HOME)/local/lib # own libgsl and libgslcblas
 GSLLIB = -L$(GSL) -lgsl -lgslcblas
 
 ifeq ($(F90),ifort)
+   INSD = intel
+   FPIC = -fPIC
+   FPP = -fpp
+   MJ = -module $(JDIR)
+   MKL = -L$(MKLROOT)/lib/intel64 -L$(HOME)/lib
+   MKLBLAS = $(MKLROOT)/include/mkl_spblas.f90
+   MKLINC = -I$(MKLROOT)/include
+else ifeq ($(F90),ifx)
    INSD = intel
    FPIC = -fPIC
    FPP = -fpp
@@ -89,6 +101,9 @@ else ifeq ($(CC),g++)
 else ifeq ($(CC),icc)
    CFLAGS = -fPIC -qopenmp
    COPT = -O2 -diag-disable=10448
+else ifeq ($(CC),icx)
+   CFLAGS = -fPIC -qopenmp
+   COPT = -O2
 endif
 
 MKL = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
@@ -110,6 +125,12 @@ INC = $(FGSLINC) $(MKLINC) -I$(JDIR) # for cpu version fgsl.mod
 ifeq ($(F90),ifort)
     #OPT = -g -qopenmp -check all -traceback -diag-disable=10448
     OPT = -O3 -qopenmp -diag-disable=10448
+    SHARED = -shared
+endif
+
+ifeq ($(F90),ifx)
+    #OPT = -g -qopenmp -check all -traceback
+    OPT = -O3 -qopenmp
     SHARED = -shared
 endif
 
